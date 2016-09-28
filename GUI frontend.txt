@@ -1,0 +1,98 @@
+glabel(paste('selected file',dir()),container=textwindow)
+
+library(RGtk2Extras)
+
+NUMBER_OF_FACS = as.numeric(svalue(numfacs))
+
+timestart=gwindow('Select Start Times and  Factors',container=TRUE)
+timegroup=ggroup(horizontal=FALSE,container=timestart)
+size(timegroup,200,350)
+if (NUMBER_OF_FACS==0)
+{starttimes=matrix(0,length(dir()),1,dimnames=list(dir(),c ('Start Time in Seconds')))
+starttimesvec = gdf (starttimes,index=TRUE,cont=timegroup,toolkit=guiToolkit())
+win <- getToolkitWidget(starttimesvec)
+gtkWidgetSetSizeRequest(win, 200, 300) 
+#gtkWindowSetResizable(win, FALSE)
+}
+if (NUMBER_OF_FACS!=0)
+{starttimes=matrix(0,length(dir()),(NUMBER_OF_FACS +1),dimnames=list(dir(),c('Start Time in Seconds',paste ('Factor',1:NUMBER_OF_FACS))))
+starttimesvec = gdf (starttimes,index=TRUE,cont=timegroup,toolkit=guiToolkit())
+win <- getToolkitWidget(starttimesvec)
+gtkWidgetSetSizeRequest(win, 200, 300) 
+#gtkWindowSetResizable(win, FALSE)
+}
+
+timeshandler = function(h,...){
+vecofstarts=as.matrix(starttimesvec[,]);
+
+visible(timestart,FALSE)
+
+#dispose(timestart);
+glabel(paste("Running program with the following cutoff times",vecofstarts[,1]), container=textwindow);
+source(paste(program_directory,"\\scripts\\fish analyzer program.txt",sep=''));
+source(paste(program_directory,"\\scripts\\multi case fish analyzer program.txt",sep=''))
+}
+
+timebutton<-gbutton('Press Here to Confirm Times and Factors  Entered',handler=timeshandler,container=timegroup)
+
+if("Speed" %in% svalue(funlist)) {SPEED <- 'ON'} else {SPEED <- 'OFF'}
+if("Thigmotaxis" %in% svalue(funlist)) {THIGMOTAXIS <- 'ON'} else {THIGMOTAXIS <- 'OFF'}
+if("Distance From Sides" %in% svalue(funlist)) {DISTANCE_FROM_SIDES<- 'ON'} else {DISTANCE_FROM_SIDES<- 'OFF'}
+if("Timespent" %in% svalue(funlist)) {TIMESPENT <- 'ON'} else {TIMESPENT <- 'OFF'}
+if("Time at Outer Percent" %in% svalue(funlist)) {TIME_AT_OUTER_PERCENT <- 'ON'} else {TIME_AT_OUTER_PERCENT <- 'OFF'}
+if("Freezing" %in% svalue(funlist)) {FREEZING <- 'ON'} else {FREEZING <- 'OFF'}
+if("Floating" %in% svalue(funlist)) {FLOATING <- 'ON'} else {FLOATING <- 'OFF'}
+if("Leaping" %in% svalue(funlist)) {LEAPING <- 'ON'} else {LEAPING <- 'OFF'}
+if("Erratic" %in% svalue(funlist)) {ERRATIC <- 'ON'} else {ERRATIC <- 'OFF'}
+if("Thrashing" %in% svalue(funlist)) {THRASHING <- 'ON'} else {THRASHING <- 'OFF'}
+if("Custom" %in% svalue(funlist)) {CUSTOM <- 'ON'} else {CUSTOM <- 'OFF'}
+if("IID" %in% svalue(funlist)) {IID <- 'ON'} else {IID <- 'OFF'}
+if("VIID" %in% svalue(funlist)) {VIID <- 'ON'} else {VIID <- 'OFF'}
+if("NND" %in% svalue(funlist)) {NND <- 'ON'} else {NND <- 'OFF'}
+
+if(svalue(advanced)) {ADVANCED<-'ON'} else{ADVANCED<-'OFF'}
+
+if(svalue(detail)) {DETAILS<-'ON'} else{DETAILS<-'OFF'}
+
+if(svalue(printexcell)) {EXCEL<-'ON'} else{EXCEL<-'OFF'}
+
+
+FOLDER_URL = dir()
+#LAST_ROW_WITH_LETTERS = as.numeric(svalue(lastrow))
+NUM_FISH = as.numeric(svalue(numfish))
+NUM_BINS = as.numeric(svalue(numbins))
+TIME_OF_BINS = as.numeric(svalue(timeofbins))
+SPECIFIC_BIN_START_TIME = 'NONE'                #deactivate for now...
+SPECIFIC_BIN_END_TIME = 'NONE'                  #deactivate for now...
+THIGMOTAXIS_X_POINT = as.numeric(svalue(thigx))
+THIGMOTAXIS_Y_POINT = as.numeric(svalue(thigy))
+PERCENT = as.numeric(svalue(percentage))
+PERCENTAGE_TANK_FREEZING = as.numeric(svalue(Perctankfreeze))
+NUM_SECONDS_FREEZING = as.numeric(svalue(numsecfreeze))
+NUM_SECONDS_FLOATING = as.numeric(svalue(numsecfloat))
+PERCENTAGE_TANK_FLOATING = as.numeric(svalue(Perctankfloat)) 
+SPEED_EXCEEDED_LEAPING = as.numeric(svalue(speedleap)) 
+SECONDS_LEAPING = as.numeric(svalue(numsecleap))
+PERCENTILE_OF_TANK_ERRATIC = as.numeric(svalue(percerr))
+SPEED_ERRATIC = as.numeric(svalue(speederr))
+SECONDS_ERRATIC = as.numeric(svalue(numsecerr))
+NUM_TURNS_ERRATIC = as.numeric(svalue(numturnserr))
+THRASHING_PERCENTILE = as.numeric(svalue(percentilethrash))
+NUM_TURNS_THRASHING = as.numeric(svalue(numturnsthrash))               
+SECONDS_THRASHING = as.numeric(svalue(numsecthrash))
+
+MIN_PERCENTILE = as.numeric(svalue(custperin))
+MAX_PERCENTILE = as.numeric(svalue(custperout))
+MIN_SPEED_CUST = as.numeric(svalue(custminspeed))
+MAX_SPEED_CUST = as.numeric(svalue(custmaxspeed))
+CUST_TURN = as.numeric(svalue(custterm))
+CUST_TIME = as.numeric(svalue(custsec))
+
+if (svalue(smoothbutton)){SMOOTH='ON'} else{SMOOTH='OFF'}
+THRESHOLD = as.numeric(svalue(threshold))
+THRESHOLD2 = as.numeric(svalue(threshold2))
+LAGINTERVAL=as.numeric(svalue(window))
+if (svalue(occbutton)){OCCLUSIONS='ON'} else{OCCLUSIONS='OFF'}
+
+
+

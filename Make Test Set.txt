@@ -1,0 +1,155 @@
+#add times here for test set
+vecofstarts=c(3037.33, 3036.02, 3030.73, 3033.46, 3033.93, 3034.41, 3016.43, 3038.42, 3028.82)
+starttimesvec=vecofstarts
+starttimesvec<-cbind(starttimesvec,0)
+require(gWidgets)
+options("guiToolkit"="RGtk2")
+require(RGtk2)
+tracker=gedit('RFT')
+textwindow<-ggroup(horizontal=FALSE,use.scrollwindow = TRUE, container=TRUE) #cont used to be mainwindow2
+size(textwindow)<-c(500,100)
+glabel('Command History',container=textwindow)
+NUMBER_OF_FACS=0
+SPEED<-'OFF'
+THIGMOTAXIS<-'OFF'
+DISTANCE_FROM_SIDES<-'OFF'
+TIMESPENT<-'OFF'
+TIME_AT_OUTER_PERCENT<-'OFF'
+FREEZING<-'OFF'
+FLOATING<-'OFF'
+LEAPING<-'OFF'
+ERRATIC<-'OFF'
+THRASHING<-'OFF'
+CUSTOM<-'OFF'
+IID<-'OFF'
+VIID<-'OFF'
+NND<-'OFF'
+ADVANCED<-'OFF'
+DETAILS<-'OFF'
+EXCEL<-'OFF'
+FOLDER_URL = dir()
+NUM_FISH = 1
+NUM_BINS = 1
+TIME_OF_BINS = 600
+SPECIFIC_BIN_START_TIME = 'NONE'  #deactivate for now...
+SPECIFIC_BIN_END_TIME = 'NONE'    #deactivate for now...
+SMOOTH='OFF'
+OCCLUSIONS='OFF'
+dir=paste(program_directory,"\\files\\ML Files\\Testing Set",sep='')
+setwd(dir)
+source(paste(program_directory,"\\scripts\\fish analyzer program.txt",sep=''))
+
+testlist<-list.files(paste(program_directory,"\\files\\ML Files\\Testing Set\\",sep=''))
+
+numtrials<-length(testlist)
+
+predictlist<-list()
+for (i in 1:numtrials)
+{
+fishparams=c()
+fishdata<-db[[i]][[1]]
+for (k in seq(0,length(fishdata[,1]),3))
+{index<-max(k,1)
+index2<-min((k+30),length(fishdata[,1]))
+instance<-fishdata[index:index2,]
+minx<-min(instance[,2])
+maxx<-max(instance[,2])
+medx<-median(instance[,2])
+meanx<-mean(instance[,2])
+varx<-var(instance[,2])
+miny<-min(instance[,3])
+maxy<-max(instance[,3])
+medy<-median(instance[,3])
+meany<-mean(instance[,3])
+vary<-var(instance[,3])
+disttocx<-mean(instance[,2]-xmax/2)
+disttocy<-mean(instance[,3]-ymax/2)
+meandx<-mean(instance[,6])
+vardx<-var(instance[,6])
+meandy<-mean(instance[,7])
+vardy<-var(instance[,7])
+meanspeed<-mean(instance[,8])
+medspeed<-median(instance[,8])
+minspeed<-min(instance[,8])
+maxspeed<-max(instance[,8])
+varspeed<-var(instance[,8])
+meanav<-mean(instance[,9])
+medav<-median(instance[,9])
+minav<-min(instance[,9])
+maxav<-max(instance[,9])
+varav<-var(instance[,9])
+changedirprop<-mean(instance[,10])
+newdata<-c(minx,maxx,medx,meanx,varx,miny,maxy,medy,
+meany,vary,disttocx,disttocy,meandx,vardx,meandy,vardy,meanspeed,medspeed,
+minspeed,maxspeed,varspeed,meanav,medav,minav,maxav,varav,changedirprop)
+fishparams<-rbind(fishparams,newdata)
+predictlist[[i]]<-fishparams}}
+
+
+#setting up reference list for test set
+BEHAVIORLIST<-c('Thrashing','Freezing','ZigZag','Floating','Swimming')
+loglist2<-list.files(paste(program_directory,"\\files\\ML Files\\Event Logs Testing\\",sep=''))
+thrashdata2<-list()
+length(thrashdata2)<-length(loglist2)
+freezedata2<-list()
+length(freezedata2)<-length(loglist2)
+zigzagdata2<-list()
+length(zigzagdata2)<-length(loglist2)
+floatdata2<-list()
+length(floatdata2)<-length(loglist2)
+swimdata2<-list()
+length(swimdata2)<-length(loglist2)
+
+
+i=1
+for(file in loglist2)
+{testy<-read.xlsx(paste(paste(program_directory,"\\files\\ML Files\\Event Logs Testing\\",sep=''),file,sep=''),1)
+datatable<-testy[,c(8,9,12,13)]
+rmdatatable<-datatable[datatable[,4]=='State start',]
+rmdatatable<-rmdatatable[rmdatatable[,3] %in% BEHAVIORLIST,]
+thrashdata2[[i]]<-rmdatatable[rmdatatable[,3]=='Thrashing',]
+freezedata2[[i]]<-rmdatatable[rmdatatable[,3]=='Freezing',]
+zigzagdata2[[i]]<-rmdatatable[rmdatatable[,3]=='ZigZag',]
+floatdata2[[i]]<-rmdatatable[rmdatatable[,3]=='Floating',]
+swimdata2[[i]]<-rmdatatable[rmdatatable[,3]=='Swimming',]
+i=i+1}
+
+for (i in 1:length(loglist2))
+{thrashing=cbind(as.numeric(thrashdata[[i]][[1]]),as.numeric(thrashdata[[i]][[1]])+as.numeric(thrashdata[[i]][[2]]))
+freezing=cbind(as.numeric(freezedata[[i]][[1]]),as.numeric(freezedata[[i]][[1]])+as.numeric(freezedata[[i]][[2]]))
+zigzag=cbind(as.numeric(zigzagdata[[i]][[1]]),as.numeric(zigzagdata[[i]][[1]])+as.numeric(zigzagdata[[i]][[2]]))
+floating=cbind(as.numeric(floatdata[[i]][[1]]),as.numeric(floatdata[[i]][[1]])+as.numeric(floatdata[[i]][[2]]))
+swimming=cbind(as.numeric(swimdata[[i]][[1]]),as.numeric(swimdata[[i]][[1]])+as.numeric(swimdata[[i]][[2]]))}
+
+reference<-list()
+length(reference)<-length(loglist2)
+
+for (j in 1:length(loglist2))
+{ref=c()
+if (length(swimming[,1])>0)
+{swimming<-cbind(swimming,c('Swim'))
+ref=rbind(ref,swimming)}
+if (length(thrashing[,1])>0)
+{thrashing<-cbind(thrashing,c('Thrash'))
+ref=rbind(ref,thrashing)}
+if (length(freezing[,1])>0)
+{freezing<-cbind(freezing,c('Freeze'))
+ref=rbind(ref,freezing)}
+if (length(zigzag[,1])>0)
+{zigzag<-cbind(zigzag,c('ZigZag'))
+ref=rbind(ref,zigzag)}
+if (length(floating[,1])>0)
+{floating<-cbind(floating,c('Float'))
+ref=rbind(ref,floating)}
+ord=order(as.numeric(ref[,1]))
+ref<-ref[ord,]
+ref[,1]<-round(as.numeric(ref[,2]),1)
+reference[[j]]<-ref
+}
+
+finalref<-list()
+length(finalref)<-length(reference)
+for (i in 1:length(reference))
+{lst<-c((10*round(as.numeric(reference[[i]][1,2]),1)),(10*diff(as.numeric(reference[[i]][,1]))))
+finalref[[i]]<-rep(reference[[i]][,3],round(lst))
+}

@@ -1,0 +1,342 @@
+BEHAVIORLIST<-c('Thrashing','Freezing','ZigZag','Floating','Swimming')
+loglist<-list.files(paste(program_directory,"\\files\\ML Files\\Event Logs\\",sep=''))
+thrashdata<-list()
+length(thrashdata)<-length(loglist)
+freezedata<-list()
+length(freezedata)<-length(loglist)
+zigzagdata<-list()
+length(zigzagdata)<-length(loglist)
+floatdata<-list()
+length(floatdata)<-length(loglist)
+swimdata<-list()
+length(swimdata)<-length(loglist)
+
+i=1
+for(file in loglist)
+{testy<-read.xlsx(paste(paste(program_directory,"\\files\\ML Files\\Event Logs\\",sep=''),file,sep=''),1)
+datatable<-testy[,c(8,9,12,13)]
+rmdatatable<-datatable[datatable[,4]=='State start',]
+rmdatatable<-rmdatatable[rmdatatable[,3] %in% BEHAVIORLIST,]
+thrashdata[[i]]<-rmdatatable[rmdatatable[,3]=='Thrashing',]
+freezedata[[i]]<-rmdatatable[rmdatatable[,3]=='Freezing',]
+zigzagdata[[i]]<-rmdatatable[rmdatatable[,3]=='ZigZag',]
+floatdata[[i]]<-rmdatatable[rmdatatable[,3]=='Floating',]
+swimdata[[i]]<-rmdatatable[rmdatatable[,3]=='Swimming',]
+i=i+1}
+
+
+numtrials<-length(loglist)
+#assumes 1 timebin for each trial when processing
+thrashvals<-c()
+freezevals<-c()
+zigzagvals<-c()
+floatvals<-c()
+swimvals<-c()
+
+#First isolate times in trials where behaviors occured
+
+for (i in 1:numtrials)
+{
+fishdata<-db[[i]][[1]]
+
+thrashing=cbind(as.numeric(thrashdata[[i]][[1]]),as.numeric(thrashdata[[i]][[1]])+as.numeric(thrashdata[[i]][[2]]))
+freezing=cbind(as.numeric(freezedata[[i]][[1]]),as.numeric(freezedata[[i]][[1]])+as.numeric(freezedata[[i]][[2]]))
+zigzag=cbind(as.numeric(zigzagdata[[i]][[1]]),as.numeric(zigzagdata[[i]][[1]])+as.numeric(zigzagdata[[i]][[2]]))
+floating=cbind(as.numeric(floatdata[[i]][[1]]),as.numeric(floatdata[[i]][[1]])+as.numeric(floatdata[[i]][[2]]))
+swimming=cbind(as.numeric(swimdata[[i]][[1]]),as.numeric(swimdata[[i]][[1]])+as.numeric(swimdata[[i]][[2]]))
+
+
+for (k in 1:length(thrashing[,1]))
+{if(length(thrashing[,1])!=0)
+{startstop<-thrashing[k,1:2]
+startstop<-floor(startstop*framerate)
+if (startstop[2]>length(fishdata[,1]))
+{startstop[2]=length(fishdata[,1])}
+if (startstop[2]-startstop[1]>=1)
+{thrashinst<-fishdata[startstop[1]:startstop[2],]
+thrashinst<-cbind(thrashinst,k)
+thrashinst<-cbind(thrashinst,i)
+thrashvals<-rbind(thrashvals,thrashinst)}}}
+
+for (k in 1:length(freezing[,1]))
+{if(length(freezing[,1])!=0)
+{startstop<-freezing[k,1:2]
+startstop<-floor(startstop*framerate)
+if (startstop[2]>length(fishdata[,1]))
+{startstop[2]=length(fishdata[,1])}
+if (startstop[2]-startstop[1]>=1)
+{freezeinst<-fishdata[startstop[1]:startstop[2],]
+freezeinst<-cbind(freezeinst,k)
+freezeinst<-cbind(freezeinst,i)
+freezevals<-rbind(freezevals,freezeinst)}}}
+
+for (k in 1:length(zigzag[,1]))
+{if(length(zigzag[,1])!=0)
+{startstop<-zigzag[k,1:2]
+startstop<-floor(startstop*framerate)
+if (startstop[2]>length(fishdata[,1]))
+{startstop[2]=length(fishdata[,1])}
+if (startstop[2]-startstop[1]>=1)
+{zigzaginst<-fishdata[startstop[1]:startstop[2],]
+zigzaginst<-cbind(zigzaginst,k)
+zigzaginst<-cbind(zigzaginst,i)
+zigzagvals<-rbind(zigzagvals,zigzaginst)}}}
+
+for (k in 1:length(floating[,1]))
+{if(length(floating[,1])!=0)
+{startstop<-floating[k,1:2]
+startstop<-floor(startstop*framerate)
+if (startstop[2]>length(fishdata[,1]))
+{startstop[2]=length(fishdata[,1])}
+if (startstop[2]-startstop[1]>=1)
+{floatinst<-fishdata[startstop[1]:startstop[2],]
+floatinst<-cbind(floatinst,k)
+floatinst<-cbind(floatinst,i)
+floatvals<-rbind(floatvals,floatinst)}}}
+
+for (k in 1:length(swimming[,1]))
+{if(length(swimming[,1])!=0)
+{startstop<-swimming[k,1:2]
+startstop<-floor(startstop*framerate)
+if (startstop[2]>length(fishdata[,1]))
+{startstop[2]=length(fishdata[,1])}
+if (startstop[2]-startstop[1]>1)
+{swiminst<-fishdata[startstop[1]:startstop[2],]
+swiminst<-cbind(swiminst,k)
+swiminst<-cbind(swiminst,i)
+swimvals<-rbind(swimvals,swiminst)}}}
+
+}
+
+#Secondly, format new tables to get window statistics, along with variance of point estimates.
+
+thrashparams<-c()
+freezeparams<-c()
+zigzagparams<-c()
+floatparams<-c()
+swimparams<-c()
+
+for (i in 1:max(thrashvals[,12]))
+{
+instances<-thrashvals[thrashvals[,12]==i,]
+if (length(instances[,11])>0)
+{for (j in 1:max(instances[,11]))
+{
+#look at each specific instance of behavior occuring
+instance<-instances[instances[,11]==j,]
+#ensure data is not empty
+if( length(instance[,1])>0 )
+{#extract additional features to analyze
+minx<-min(instance[,2])
+maxx<-max(instance[,2])
+medx<-median(instance[,2])
+meanx<-mean(instance[,2])
+varx<-var(instance[,2])
+disttocx<-mean(instance[,2]-xmax/2)
+disttocy<-mean(instance[,3]-ymax/2)
+miny<-min(instance[,3])
+maxy<-max(instance[,3])
+medy<-median(instance[,3])
+meany<-mean(instance[,3])
+vary<-var(instance[,3])
+meandx<-mean(instance[,6])
+vardx<-var(instance[,6])
+meandy<-mean(instance[,7])
+vardy<-var(instance[,7])
+meanspeed<-mean(instance[,8])
+medspeed<-median(instance[,8])
+minspeed<-min(instance[,8])
+maxspeed<-max(instance[,8])
+varspeed<-var(instance[,8])
+meanav<-mean(instance[,9])
+medav<-median(instance[,9])
+minav<-min(instance[,9])
+maxav<-max(instance[,9])
+varav<-var(instance[,9])
+changedirprop<-mean(instance[,10])
+newdata<-c(minx,maxx,medx,meanx,varx,miny,maxy,medy,
+meany,vary,disttocx,disttocy,meandx,vardx,meandy,vardy,meanspeed,medspeed,minspeed,maxspeed,varspeed,meanav,medav,minav,maxav,varav,changedirprop)
+thrashparams<-rbind(thrashparams,newdata)
+}}
+}}
+
+for (i in 1:max(zigzagvals[,12]))
+{
+instances<-zigzagvals[zigzagvals[,12]==i,]
+if (length(instances[,11])>0)
+{for (j in 1:max(instances[,11]))
+{
+#look at each specific instance of behavior occuring
+instance<-instances[instances[,11]==j,]
+#ensure data is not empty
+if( length(instance[,1])>0 )
+{#extract additional features to analyze
+minx<-min(instance[,2])
+maxx<-max(instance[,2])
+medx<-median(instance[,2])
+meanx<-mean(instance[,2])
+varx<-var(instance[,2])
+miny<-min(instance[,3])
+maxy<-max(instance[,3])
+medy<-median(instance[,3])
+meany<-mean(instance[,3])
+vary<-var(instance[,3])
+disttocx<-mean(instance[,2]-xmax/2)
+disttocy<-mean(instance[,3]-ymax/2)
+meandx<-mean(instance[,6])
+vardx<-var(instance[,6])
+meandy<-mean(instance[,7])
+vardy<-var(instance[,7])
+meanspeed<-mean(instance[,8])
+medspeed<-median(instance[,8])
+minspeed<-min(instance[,8])
+maxspeed<-max(instance[,8])
+varspeed<-var(instance[,8])
+meanav<-mean(instance[,9])
+medav<-median(instance[,9])
+minav<-min(instance[,9])
+maxav<-max(instance[,9])
+varav<-var(instance[,9])
+changedirprop<-mean(instance[,10])
+newdata<-c(minx,maxx,medx,meanx,varx,miny,maxy,medy,
+meany,vary,disttocx,disttocy,meandx,vardx,meandy,vardy,meanspeed,medspeed,
+minspeed,maxspeed,varspeed,meanav,medav,minav,maxav,varav,changedirprop)
+zigzagparams<-rbind(zigzagparams,newdata)
+}}
+}}
+
+for (i in 1:max(floatvals[,12]))
+{
+instances<-floatvals[floatvals[,12]==i,]
+if (length(instances[,11])>0)
+{for (j in 1:max(instances[,11]))
+{
+#look at each specific instance of behavior occuring
+instance<-instances[instances[,11]==j,]
+#ensure data is not empty
+if( length(instance[,1])>0 )
+{#extract additional features to analyze
+minx<-min(instance[,2])
+maxx<-max(instance[,2])
+medx<-median(instance[,2])
+meanx<-mean(instance[,2])
+varx<-var(instance[,2])
+miny<-min(instance[,3])
+maxy<-max(instance[,3])
+medy<-median(instance[,3])
+meany<-mean(instance[,3])
+vary<-var(instance[,3])
+disttocx<-mean(instance[,2]-xmax/2)
+disttocy<-mean(instance[,3]-ymax/2)
+meandx<-mean(instance[,6])
+vardx<-var(instance[,6])
+meandy<-mean(instance[,7])
+vardy<-var(instance[,7])
+meanspeed<-mean(instance[,8])
+medspeed<-median(instance[,8])
+minspeed<-min(instance[,8])
+maxspeed<-max(instance[,8])
+varspeed<-var(instance[,8])
+meanav<-mean(instance[,9])
+medav<-median(instance[,9])
+minav<-min(instance[,9])
+maxav<-max(instance[,9])
+varav<-var(instance[,9])
+changedirprop<-mean(instance[,10])
+newdata<-c(minx,maxx,medx,meanx,varx,miny,maxy,medy,
+meany,vary,disttocx,disttocy,meandx,vardx,meandy,vardy,meanspeed,medspeed,
+minspeed,maxspeed,varspeed,meanav,medav,minav,maxav,varav,changedirprop)
+floatparams<-rbind(floatparams,newdata)
+}}
+}}
+
+
+for (i in 1:max(zigzagvals[,12]))
+{
+instances<-zigzagvals[zigzagvals[,12]==i,]
+if (length(instances[,11])>0)
+{for (j in 1:max(instances[,11]))
+{
+#look at each specific instance of behavior occuring
+instance<-instances[instances[,11]==j,]
+#ensure data is not empty
+if( length(instance[,1])>0 )
+{#extract additional features to analyze
+minx<-min(instance[,2])
+maxx<-max(instance[,2])
+medx<-median(instance[,2])
+meanx<-mean(instance[,2])
+varx<-var(instance[,2])
+miny<-min(instance[,3])
+maxy<-max(instance[,3])
+medy<-median(instance[,3])
+meany<-mean(instance[,3])
+vary<-var(instance[,3])
+disttocx<-mean(instance[,2]-xmax/2)
+disttocy<-mean(instance[,3]-ymax/2)
+meandx<-mean(instance[,6])
+vardx<-var(instance[,6])
+meandy<-mean(instance[,7])
+vardy<-var(instance[,7])
+meanspeed<-mean(instance[,8])
+medspeed<-median(instance[,8])
+minspeed<-min(instance[,8])
+maxspeed<-max(instance[,8])
+varspeed<-var(instance[,8])
+meanav<-mean(instance[,9])
+medav<-median(instance[,9])
+minav<-min(instance[,9])
+maxav<-max(instance[,9])
+varav<-var(instance[,9])
+changedirprop<-mean(instance[,10])
+newdata<-c(minx,maxx,medx,meanx,varx,miny,maxy,medy,
+meany,vary,disttocx,disttocy,meandx,vardx,meandy,vardy,meanspeed,medspeed,
+minspeed,maxspeed,varspeed,meanav,medav,minav,maxav,varav,changedirprop)
+zigzagparams<-rbind(zigzagparams,newdata)
+}}
+}}
+
+for (i in 1:max(swimvals[,12]))
+{
+instances<-swimvals[swimvals[,12]==i,]
+if (length(instances[,11])>0)
+{for (j in 1:max(instances[,11]))
+{
+#look at each specific instance of behavior occuring
+instance<-instances[instances[,11]==j,]
+#ensure data is not empty
+if( length(instance[,1])>0 )
+{#extract additional features to analyze
+minx<-min(instance[,2])
+maxx<-max(instance[,2])
+medx<-median(instance[,2])
+meanx<-mean(instance[,2])
+varx<-var(instance[,2])
+miny<-min(instance[,3])
+maxy<-max(instance[,3])
+medy<-median(instance[,3])
+meany<-mean(instance[,3])
+vary<-var(instance[,3])
+disttocx<-mean(instance[,2]-xmax/2)
+disttocy<-mean(instance[,3]-ymax/2)
+meandx<-mean(instance[,6])
+vardx<-var(instance[,6])
+meandy<-mean(instance[,7])
+vardy<-var(instance[,7])
+meanspeed<-mean(instance[,8])
+medspeed<-median(instance[,8])
+minspeed<-min(instance[,8])
+maxspeed<-max(instance[,8])
+varspeed<-var(instance[,8])
+meanav<-mean(instance[,9])
+medav<-median(instance[,9])
+minav<-min(instance[,9])
+maxav<-max(instance[,9])
+varav<-var(instance[,9])
+changedirprop<-mean(instance[,10])
+newdata<-c(minx,maxx,medx,meanx,varx,miny,maxy,medy,
+meany,vary,disttocx,disttocy,meandx,vardx,meandy,vardy,meanspeed,medspeed,minspeed,maxspeed,varspeed,meanav,medav,minav,maxav,varav,changedirprop)
+swimparams<-rbind(swimparams,newdata)
+}}
+}}
+

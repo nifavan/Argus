@@ -1,0 +1,26 @@
+multiocclusionfunct<-function(t)
+{start <- seq(1, by = 2, length = NUM_FISH)
+for (i in start){
+for (j in start){
+if (i!=j)
+{ind<-(t[,i]==t[,j])&(t[,(i+1)]==t[,(j+1)])
+for (k in 2:(length(t[,1])-1)){
+if(ind[k]){
+oldx1=t[(k-1),i]
+oldy1=t[(k-1),(i+1)]
+newx1=t[(k+1),i]
+newy1=t[(k+1),(i+1)]
+oldx2=t[(k-1),j]
+oldy2=t[(k-1),(j+1)]
+newx2=t[(k+1),j]
+newy2=t[(k+1),(j+1)]
+turnangle1<-as.vector(180/pi)*(acos(oldy1/sqrt ((oldx1^2)+(oldy1^2)))-acos(newy1/sqrt((newx1^2)+(newy1^2))))
+turnangle2<-as.vector(180/pi)*(acos(oldy2/sqrt ((oldx2^2)+(oldy2^2)))-acos(newy2/sqrt((newx2^2)+(newy2^2))))
+if(turnangle1>turnangle2)
+{swaprow1<-t[k:length(t[,1]),c(i,(i+1))]
+swaprow2<-t[k:length(t[,1]),c(j,(j+1))]
+t[k:length(t[,1]),c(i,(i+1))]<-swaprow2
+t[k:length(t[,1]),c(j,(j+1))]<-swaprow1}
+}}}
+}}
+return(t)}

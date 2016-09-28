@@ -1,0 +1,30 @@
+labels2<-factor(labels2,levels=BEHAVIORLIST)
+testlabels<-class.ind(labels2)
+testset<-cbind(testlabels,testset)
+testset2<-matrix(as.numeric(testset),length(testset[,1]),
+length(testset[1,]))
+
+predictions3=compute(bNN, testset2[,6:105])
+
+testingpredictions<-c()
+testingresults<-predictions3$net.result
+for (i in 1:length(testingresults[,1]))
+{ind<-which.max(testingresults[i,])
+testingpredictions<-c(testingpredictions,labels(testlabels)[[2]][ind])}
+
+testref<-factor(labels2,levels=BEHAVIORLIST)
+testingpredictions<-factor(testingpredictions,levels=BEHAVIORLIST)
+conmat3<-confusionMatrix(testingpredictions,testref)
+
+
+#now lets see if we add prior state change probabilities...
+ind<-which.max(testingresults[1,])
+testingpredictions2<-c(labels(trainlabels)[[2]][ind])
+for (i in 2:length(testingresults[,1]))
+{transformedprob<-testingresults[i,]*transitionmatrix[ind,]
+ind<-which.max(transformedprob)
+testingpredictions2<-c(testingpredictions2,labels(trainlabels)[[2]][ind])}
+testingpredictions2<-factor(testingpredictions2,levels=BEHAVIORLIST)
+conmat4<-confusionMatrix(testingpredictions2,testref)
+
+

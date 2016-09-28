@@ -1,0 +1,164 @@
+BEHAVIORLIST<-c('Thrashing','Freezing','ZigZag','Floating','Swimming')
+loglist<-list.files(paste(program_directory,"\\files\\ML Files\\Event Logs\\",sep=''))
+
+behavedata<-list()
+length(behavedata)<-length(BEHAVIORLIST)
+
+i=1
+for(file in loglist)
+{testy<-read.xlsx(paste(paste(program_directory,"\\files\\ML Files\\Event Logs\\",sep=''),file,sep=''),1)
+datatable<-testy[,c(8,9,12,13)]
+rmdatatable<-datatable[datatable[,4]=='State start',]
+rmdatatable<-rmdatatable[rmdatatable[,3] %in% BEHAVIORLIST,]
+for (j in 1:length(behavedata))
+{behavedata[[j]][[i]]<-rmdatatable[rmdatatable [,3]==BEHAVIORLIST[j],]}
+i=i+1}
+
+numtrials<-length(loglist)
+#assumes 1 timebin for each trial when processing
+vals<-list()
+length(vals)<-length(BEHAVIORLIST)
+
+#First isolate times in trials where behaviors occured
+
+for (j in 1:length(BEHAVIORLIST))
+{for (i in 1:numtrials)
+{fishdata<-db[[i]][[1]]
+vals[[j]][[i]]<-cbind(as.numeric(behavedata[[j]][[i]] [[1]]),as.numeric(behavedata[[j]][[i]][[1]])+as.numeric (behavedata[[j]][[i]][[2]]))}}
+
+trials<-list()
+length(trials)<-numtrials
+for (i in 1:numtrials)
+{for (j in 1:length(BEHAVIORLIST))
+{trials[[i]]<-rbind(trials[[i]],cbind(vals[[j]] [[i]],BEHAVIORLIST[j]))}}
+
+for (i in 1:numtrials)
+{ord=order(as.numeric(trials[[i]][,1]))
+trials[[i]]<-trials[[i]][ord,]
+trials[[i]][,1]<-round(as.numeric(trials[[i]][,2]),1)}
+
+
+for (i in 1:numtrials)
+{lst<-c(10*as.numeric(trials[[i]][1,1]),(10*diff(as.numeric (trials[[i]][,1]))))
+trials[[i]]<-rep(trials[[i]][,3],round(lst))}
+
+windowfeatures<-c()
+
+GetFeatures<-function(insts)
+{newdata<-c() #extract additional features to analyze
+for (i in c(2,3,6,7,8,9))
+{
+datavec<-c()
+means<-mean(insts[,i])
+vars<-var(insts[,i])
+meds<-median(insts[,i])
+mins<-min(insts[,i])
+maxs<-max(insts[,i])
+interev<-mean(insts[20:30,i]-mean(insts[1:10,i]))
+binvals<-(maxs-mins)/4
+bin1<-sum(insts[,i]<(mins+binvals))/length(insts[,i])
+bin2<-(sum((mins+binvals)<insts[,i] & insts[,i]<(mins +2*binvals)))/length(insts[,i])
+bin3<-(sum((mins+2*binvals)<insts[,i] & insts[,i]<(mins +3*binvals)))/length(insts[,i])
+bin4<-(sum((mins+3*binvals)<insts[,i] & insts[,i]<(mins +4*binvals)))/length(insts[,i])
+datavec<-c (means,vars,meds,mins,maxs,interev,bin1,bin2,bin3,bin4)
+newdata<-c(newdata,datavec,insts[,i])
+}
+return(newdata)}
+
+windowfeatures2<-c()
+
+windowfeatures3<-list()
+length(windowfeatures3)<-numtrials
+
+for (i in 1:numtrials)
+{for (j in seq(1,(length(trials[[i]])-30),30))
+{index<-j
+index2<-min(length(db[[i]][[1]][,1]),(j+30))
+if (index2-index < 28)
+{index = index2-30}
+if (all( trials[[i]][[j]] %in% 
+trials[[i]][index:index2]))
+{feat<-GetFeatures(db[[i]][[1]][index:index2,])
+feat<-c(feat,trials[[i]][[j]])
+windowfeatures<-rbind(windowfeatures,feat)
+windowfeatures2<-rbind(windowfeatures,feat)}}
+windowfeatures3[[i]]<-windowfeatures2[,length(windowfeatures2[1,])]
+windowfeatures2<-c()}
+
+windowfeaturesmod<-matrix(,length(windowfeatures[,1]),(length (windowfeatures[1,])-1))
+for (i in seq(1,(length(windowfeatures[1,])-1)))
+{windowfeaturesmod[,i]<-scale(as.numeric(windowfeatures[,i]))}
+
+
+#########################################################
+#try some dimensionality reduction with PCA
+
+res <- prcomp(windowfeaturesmod, center = TRUE, scale = TRUE)
+names(res)
+
+#plot(cumsum(res$sdev^2/sum(res$sdev^2))) #cumulative explained variance
+
+pc.use=100  #seems to keep most of the variance
+#the loadings are stored here -> res$rotation
+#the eigenvectors are stored here -> res$x
+#the eigenvalues are stored here -> res$sdev
+
+
+#########################################################
+#to retrieve the data
+#trunc <- res$x[,1:pc.use] %*% t(res$rotation[,1:pc.use])
+#and add the center (and re-scale) back to data
+#if(res$scale != FALSE){
+#    	trunc <- scale(trunc, center = FALSE , scale=1/res #$scale)
+#    }
+#    if(res$center != FALSE){
+#    trunc <- scale(trunc, center = -1 * res$center,  #scale=FALSE)}
+#dim(trunc); dim(mat)
+#########################################################
+
+#can feed this into the neural network now!
+trainingset<-windowfeaturesmod %*% res$rotation[,1:pc.use]
+
+#Dont forget to re add the labels!
+labels<-windowfeatures[,length(windowfeatures[1,])]
+
+#########################################################
+
+windowfeatures2<-c()
+
+windowfeatures3<-list()
+length(windowfeatures3)<-numtrials
+
+for (i in 1:numtrials)
+{for (j in seq(1,(length(trials[[i]])-30),30))
+{index<-j
+index2<-min(length(db[[i]][[1]][,1]),(j+30))
+if (index2-index < 28)
+{index = index2-30}
+if (all( trials[[i]][[j]] %in% 
+trials[[i]][index:index2]))
+{feat<-GetFeatures(db[[i]][[1]][index:index2,])
+feat<-c(feat,trials[[i]][[j]])
+windowfeatures<-rbind(windowfeatures,feat)
+windowfeatures2<-rbind(windowfeatures,feat)}}
+windowfeatures3[[i]]<-windowfeatures2[,length(windowfeatures2[1,])]
+windowfeatures2<-c()}
+
+maketmat<-function(mat)
+{states<-mat
+states<-factor(states,levels=BEHAVIORLIST)
+transmat<-table(states[-length(states)],states[-1])
+return(transmat)}
+
+mats<-lapply(windowfeatures3,maketmat)
+
+formula<-paste('mats[[',1:5,']]',collapse=' + ',sep=' ')
+transmatrix=parse(text=formula)
+transmatrix<-eval(transmatrix)
+
+transmatrix<-prop.table(transmatrix)
+margmatrix<-margin.table(transmatrix,2)
+margmatrix<-1/margmatrix
+margmatrix<-matrix(rep(margmatrix,each=length(BEHAVIORLIST)),nrow=length(BEHAVIORLIST))
+transmatrix<-t(transmatrix*margmatrix)
+transitionmatrix<-transmatrix

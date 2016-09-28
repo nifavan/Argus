@@ -1,0 +1,793 @@
+if (NUM_FISH == 1)
+{
+cat('made by Matthew Scicluna 2014\n')
+library(xlsx)
+CUTOFF_TIMES_LIST = starttimesvec[,1]
+fishfiles = list.files()
+db<-list()
+functions<-list()
+length(functions)<-39
+length(db)<-length(fishfiles)
+data1 = data.frame()
+data2 = data.frame()
+data3 = data.frame()
+data4 = data.frame()
+data5 = data.frame()
+data6 = data.frame()
+data7 = data.frame()
+data8 = data.frame()
+data9 = data.frame()
+data10 = data.frame()
+data12 = data.frame()
+data13 = data.frame()
+data14 = data.frame()
+data15 = data.frame()
+data16 = data.frame()
+data17 = data.frame()
+data18 = data.frame()
+data19 = data.frame()
+data11 = data.frame()
+data20 = data.frame()
+data21 = data.frame()
+data22 = data.frame()
+data23 = data.frame()
+data24 = data.frame()
+data25 = data.frame()
+data26 = data.frame()
+data27 = data.frame()
+data28 = data.frame()
+data29 = data.frame()
+data30 = data.frame()
+data31 = data.frame()
+data32 = data.frame()
+data33 = data.frame()
+data34 = data.frame()
+data35 = data.frame()
+data36 = data.frame()
+data37 = data.frame()
+data38 = data.frame()
+data39 = data.frame()
+
+file_index = 1
+
+for (file in fishfiles)
+{ 
+if (svalue(tracker)=="RFT")
+{source(paste(program_directory,"\\scripts\\RealFishTrackerConverter.txt",sep=''))}
+
+if (svalue(tracker)=="ETH")
+{source(paste(program_directory,"\\scripts\\EthovisionConverter.txt",sep=''))}
+
+
+#filename=substr(fishfiles[file_index],0,14)
+#datar<-read.table(file=file,sep=" #",header=F,as.is=T,fill=T,col.names=1:8) #reads raw data from #realfishtracker into R
+#xmax<-as.numeric(datar[4,5])
+#ymax<-as.numeric(datar[6,5])
+#x<-as.numeric(datar[-LAST_ROW_WITH_LETTERS:-1,7]) #finds x #coordinate values
+#y<-as.numeric(datar[-LAST_ROW_WITH_LETTERS:-1,8]) #finds y #coordinate values
+#times2<-as.numeric(datar[-LAST_ROW_WITH_LETTERS:-1,1])
+#times<-times2-times2[1]
+#coord<-cbind(times,x,y)
+#framerate<-floor(1/coord[2,1])
+
+
+timeremoved<-(CUTOFF_TIMES_LIST[file_index]*framerate) #number of frames to be cut
+x<-x[-1:-timeremoved]
+y<-y[-1:-timeremoved]
+times2<-as.numeric(coord[-1:-timeremoved,1])
+times<-times2-times2[1]
+coord<-cbind(times,x,y)
+
+if (SPECIFIC_BIN_START_TIME != 'NONE' & SPECIFIC_BIN_END_TIME != 'NONE' & NUM_BINS == 'NONE' & TIME_OF_BINS == 'NONE') #make a specific bin starting at SPECIFIC_BIN_START_TIME and ending at SPECIFIC_BIN_END_TIME
+{min_begin <- as.numeric(SPECIFIC_BIN_START_TIME*framerate*60) #modifies minutes to frame rate
+min_end <- as.numeric(SPECIFIC_BIN_END_TIME*framerate*60) #modifies minutes to frame rate
+x = as.numeric(x[min_begin:min_end])
+y = as.numeric(y[min_begin:min_end])
+z = cbind(x,y)
+bins<-split(as.data.frame(z),rep(1, each=(length(x))))}
+
+if (SPECIFIC_BIN_START_TIME != 'NONE' & SPECIFIC_BIN_END_TIME != 'NONE' & NUM_BINS != 'NONE' & TIME_OF_BINS != 'NONE') #make a specific bin starting at SPECIFIC_BIN_START_TIME and ending at SPECIFIC_BIN_END_TIME
+{print('Invalid combination of a specific timebin time interval and minutes or number of bins to analyze')}
+
+if (TIME_OF_BINS == 'NONE' & NUM_BINS == 'NONE' & SPECIFIC_BIN_START_TIME == 'NONE' & SPECIFIC_BIN_END_TIME == 'NONE')
+{print('please specify time or length of bin(s) or a specific interval for a bin')}
+
+if (NUM_BINS != 'NONE' & TIME_OF_BINS == 'NONE' & SPECIFIC_BIN_START_TIME == 'NONE' & SPECIFIC_BIN_END_TIME == 'NONE'){  # make NUM_BINS number of bins
+a<-(length(x)%%NUM_BINS)
+coord<-cbind(x,y)
+if (a!=0){coord = coord[-length(x):-a,]}
+bins<-split(as.data.frame(coord),rep(1:NUM_BINS, each=(length(x)/NUM_BINS)))}
+
+if (TIME_OF_BINS != 'NONE' & NUM_BINS == 'NONE' & SPECIFIC_BIN_START_TIME == 'NONE' & SPECIFIC_BIN_END_TIME == 'NONE'){
+#make bins each of particular time in seconds
+timev = TIME_OF_BINS*framerate
+a<-(length(x)%%timev)
+if (length(x) >= NUM_BINS*timev){
+coord=cbind(x,y)
+coord<-coord[0:(NUM_BINS*timev) , ]
+bins<-split(as.data.frame(coord),rep(1:NUM_BINS, each = timev))}}
+
+
+if (NUM_BINS != 'NONE' & TIME_OF_BINS != 'NONE' & SPECIFIC_BIN_START_TIME == 'NONE' & SPECIFIC_BIN_END_TIME == 'NONE'){
+# make numbins number of bins each timev in length
+timev = framerate*TIME_OF_BINS
+a<-length(x)%%(NUM_BINS*timev)
+if (length(x) < NUM_BINS*timev)
+{print('invalid parameters, please lower time of bin(s) or number of bin(s) or both')}
+if (length(x) >= NUM_BINS*timev){
+coord=cbind(x,y)
+coord<-coord[0:(NUM_BINS*timev) , ]
+bins<-split(as.data.frame(coord),rep(1:NUM_BINS, each = timev))}
+
+i=1                                                               #ensures bin is right length
+while (i <= length(bins))
+{bins[[i]]=bins[[i]][1:timev,]
+i = i+1}
+}
+
+if (SMOOTH == 'ON')
+{source(paste(program_directory,"\\scripts\\smoother.txt",sep=''))
+bins=lapply(bins,smoothfunct)
+}
+
+summary <- function(bins) #makes a data summary table that may be useful to other functions...
+{xval<-bins[,1]
+yval<-bins[,2]
+oldx<-as.numeric(xval[-length(xval)])
+oldy<-as.numeric(yval[-length(yval)])
+number<-as.numeric((1:length(oldx)))
+dx<-as.numeric(diff(xval,1)) #change in x coordinate of fish at every timeframe
+dy<-as.numeric(diff(yval,1)) #change in y coordinate of fish at every timeframe
+movement<-as.numeric(sqrt(dx^2+dy^2)) #movement of fish at each timeframe (using pythagoreas theorem)
+speeds<-movement*framerate #the speed of the fish at each timeframe
+newx<-c(xval[-1])
+newy<-c(yval[-1])
+turnangle<-as.vector(180/pi)*(acos(oldy/sqrt((oldx^2)+(oldy^2)))-acos(newy/sqrt((newx^2)+(newy^2))))
+i = 1
+#turnangle = matrix(,length(turnangle),1)
+while (i < length(turnangle)){
+if(turnangle[i]<0){turnangle[i]<-abs(turnangle[i])}
+i = i + 1}
+angularvelocity<-turnangle*framerate
+changedir<-c(0,((diff(sign(dx)) != 0)|(diff(sign(dy)) !=0))) #proportion of time fish changes direction (dx OR dy vector changes sign)
+datasummary<-cbind(number,oldx,oldy,newx,newy,dx,dy,speeds,angularvelocity,changedir)
+return(datasummary)}
+
+bins<-lapply(bins,summary) #makes summary bins object to be used for Argus' functions.
+
+if(ADVANCED=='ON')
+{printout33<-c()
+for (i in 1:length(bins))
+{printout33<-rbind(printout33,rep(paste('bin',i,'from file',filename),10),bins[[i]])}
+}
+
+speed2<-function(bins)
+{speeds<-bins[,8]
+speed<-mean(speeds)
+varspeed<-sqrt(var(speeds)) #the variance of those speeds
+movement<-as.numeric(sqrt(bins[,6]^2+bins[,7]^2))
+totaldistance<-sum(movement)
+fastest<-tail(sort(speeds),1)
+output<-c(totaldistance,speed,varspeed,fastest)
+return(output)}
+
+if (SPEED == 'ON'){
+i = 1
+printout1 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout2 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout3 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout4 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+speedslist<-lapply(bins,speed2)
+for(i in 1:length(speedslist)){
+printout1[1,i] <- speedslist[[i]][1]
+printout2[1,i] <- speedslist[[i]][2]
+printout3[1,i] <- speedslist[[i]][3]
+printout4[1,i] <- speedslist[[i]][4]
+}
+
+if(NUMBER_OF_FACS!=0){
+printout1<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout1)
+printout2<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout2)
+printout3<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout3)
+printout4<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout4)
+}}
+
+thigmotaxis2<-function(bins)
+{dxp<-sqrt((bins[,2]-THIGMOTAXIS_X_POINT)^2) #distance from point (in x direction)
+dyp<-sqrt((bins[,3]-THIGMOTAXIS_Y_POINT)^2) #distance from ymed (in y direction)
+distfromp<-sum(sqrt(dxp^2+dyp^2)) #distance of fish from point of tank at each timeframe (using pythagoreas theorem)
+return(distfromp/length(dxp))}
+
+if (THIGMOTAXIS == 'ON'){
+printout5 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste( 'bin ', 1:length(bins)))))
+thiglist<-lapply(bins,thigmotaxis2)
+for (i in 1:length(bins))
+{printout5[1,i] <- thiglist[[i]][1]}
+if(NUMBER_OF_FACS!=0){
+printout5<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout5)
+}}
+
+timespent<-function(bins)
+{movement<-sqrt(bins[,6]^2+bins[,7]^2) #movement of fish at each timeframe (using pythagoreas theorem)
+totaltime<- length(bins[,6])/framerate #total time of bin
+speeds<-bins[,8] #the speed of the fish at each timeframe
+acceleration<-diff(movement,1) #change in speeds between timeframes.
+paccel<-sum(acceleration>0)/length(acceleration) #how often fish gained more speed after a timeframe
+pspeed1<-sum(speeds<5)/length(speeds) #probability (proportion of time) fish went less than 5cm/s
+pspeed2<-sum(speeds>5&speeds<10)/length(speeds)
+pspeed3<-sum(speeds>10&speeds<15)/length(speeds)
+pspeed4<-sum(speeds>15&speeds<20)/length(speeds)
+pspeed5<-sum(speeds>20&speeds<25)/length(speeds)
+pspeed6<-sum(speeds>25&speeds<30)/length(speeds)
+pspeed7<-sum(speeds>30)/length(speeds)
+pstill<-sum(movement==0)/length(speeds) #proportion of time fish did not move between timeframes
+pchangedir<-sum(bins[,10]==1)/length(bins[,10]) #proportion of time fish changes direction (dx OR dy vector changes sign)
+output<-c(paccel,pstill,pchangedir,pspeed1,pspeed2,pspeed3,pspeed4,pspeed5,pspeed6,pspeed7)*totaltime
+return(output)}
+
+if (TIMESPENT == 'ON'){
+printout6 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout7 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout8 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout9 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout10 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout11 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout12 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout13 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout14 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout15 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+timespentlist <- lapply(bins,timespent)
+for (i in 1:length(bins)){
+printout6[1,i] <- timespentlist[[i]][1]
+printout7[1,i] <- timespentlist[[i]][2]
+printout8[1,i] <- timespentlist[[i]][3]
+printout9[1,i] <- timespentlist[[i]][4]
+printout10[1,i] <- timespentlist[[i]][5]
+printout11[1,i] <- timespentlist[[i]][6]
+printout12[1,i] <- timespentlist[[i]][7]
+printout13[1,i] <- timespentlist[[i]][8]
+printout14[1,i] <- timespentlist[[i]][9]
+printout15[1,i] <- timespentlist[[i]][10]}
+if(NUMBER_OF_FACS!=0){
+printout6<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout6)
+printout7<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout7)
+printout8<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout8)
+printout9<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout9)
+printout10<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout10)
+printout11<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout11)
+printout12<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout12)
+printout13<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout13)
+printout14<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout14)
+printout15<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout15)
+}}
+
+distfromsides<-function(bins)
+{distfrombottom<-as.numeric(sum(bins[,3])/length(bins[,3]))
+distfromtop<-ymax-distfrombottom
+distfromleft<-sum(bins[,2])/length(bins[,2])
+distfromright<-xmax-distfromleft
+output<-c(distfrombottom,distfromtop,distfromleft,distfromright)
+return(output)}
+
+
+if (DISTANCE_FROM_SIDES == 'ON')
+{i = 1
+printout16 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout17 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout18 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+printout19 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),paste('bin ', 1:length(bins))))
+distfromsideslist<-lapply(bins,distfromsides)
+for (i in 1:length(bins)){
+printout16[1,i] <- distfromsideslist[[i]][1]
+printout17[1,i] <- distfromsideslist[[i]][2]
+printout18[1,i] <- distfromsideslist[[i]][3]
+printout19[1,i] <- distfromsideslist[[i]][4]}
+if(NUMBER_OF_FACS!=0){
+printout16<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout16)
+printout17<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout17)
+printout18<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout18)
+printout19<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout19)}}
+
+timeatouter<-function(bins)
+{lower5x<-as.numeric((xmax/2)-(PERCENT/200)*xmax) #area representing leftmost PERCENT% of fish tank
+upper95x<-as.numeric((xmax/2)+(PERCENT/200)*xmax) #area representing rightmost PERCENT% of fish tank
+lower5y<-as.numeric((ymax/2)-(PERCENT/200)*ymax) #area representing upper PERCENT% of fish tank
+upper95y<-as.numeric((ymax/2)+(PERCENT/200)*ymax) #area representing bottommost PERCENT% of fish tank
+pperiphery<-as.numeric(sum(bins[,2]<=lower5x|bins[,2]>=upper95x|bins[,3]<=lower5y|bins[,3]>=upper95y)/length(bins[,2])) #proportion of time spent in outermost area of fishtank (representing PERCENT% of total area of tank)
+output<-as.numeric(pperiphery*(length(bins[,2])/framerate))
+return(output)}
+
+if (TIME_AT_OUTER_PERCENT == 'ON')
+{printout20 <- matrix(,1,length(bins),byrow=F,dimnames = list(paste(filename),c(paste('bin ', 1:length(bins)))))
+timeatouterlist<-lapply(bins,timeatouter)
+for (i in 1:length(bins)){
+printout20[1,i] <- timeatouterlist[[i]][1]}
+if(NUMBER_OF_FACS!=0){
+printout20<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout20)
+}}
+
+params=c(0,0,0,0,0,0) #initialize params
+
+custom<-function(cbins) 
+{IN_P=params[1]
+OUT_P=params[2]
+MIN_S=params[3]
+MAX_S=params[4]
+CUST_TURN=params[5]
+CUST_TIME=params[6]
+number=cbins[,1]
+oldx=cbins[,2]
+oldy=cbins[,3]
+speeds=cbins[,8]
+changedir=cbins[,10]
+lowerxin<-(xmax/2)-(IN_P/200)*xmax #area representing leftmost IN_P% of fish tank
+upperxin<-(xmax/2)+(IN_P/200)*xmax #area representing rightmost IN_P% of fish tank
+loweryin<-(ymax/2)-(IN_P/200)*ymax #area representing upper IN_P% of fish tank
+upperyin<-(ymax/2)+(IN_P/200)*ymax #area representing bottommost IN_P% of fish tank
+
+lowerxout<-(xmax/2)-(OUT_P/200)*xmax #area representing leftmost OUT_P% of fish tank
+upperxout<-(xmax/2)+(OUT_P/200)*xmax #area representing rightmost OUT_P% of fish tank
+loweryout<-(ymax/2)-(OUT_P/200)*ymax #area representing upper OUT_P% of fish tank
+upperyout<-(ymax/2)+(OUT_P/200)*ymax #area representing bottommost OUT_P% of fish tank
+
+customsubset<-as.vector(subset(cbins, speeds>=MIN_S & speeds<=MAX_S & (oldx>=lowerxin|oldx<=upperxin|oldy>=loweryin|oldy<=upperyin) & (oldx<=lowerxout|oldx>=upperxout|oldy<=loweryout|oldy>=upperyout), select = number))
+customsubset<-cbind(customsubset,as.vector(subset(cbins, speeds>=MIN_S & speeds<=MAX_S & (oldx>=lowerxin|oldx<=upperxin|oldy>=loweryin|oldy<=upperyin) & (oldx<=lowerxout|oldx>=upperxout|oldy<=loweryout|oldy>=upperyout), select = changedir)))
+k=1
+w=1
+turncount=1
+starts=c()
+ends=c()
+durations = c()
+while (w < length(customsubset[,1])-1)
+{while (customsubset[w,1] == customsubset[w+1,1]-1 & w<length(customsubset[,1])-1)
+{if(customsubset[w,2] == 1)
+{turncount=turncount+1}
+k=k+1
+w=w+1
+}
+if (k>floor(framerate*CUST_TIME) & turncount >= CUST_TURN)
+{starts=c(starts,(customsubset[w]-k)/framerate)
+ends = c(ends,customsubset[w]/framerate)
+durations = c(durations, k/framerate)}
+w = w + 1
+k = 1
+turncount = 1
+}
+return(cbind(starts,ends,durations))
+}
+
+if (FREEZING == 'ON')
+#fish not moving within PERCENTAGE% of fishtank for NUM_SECONDS_FREEZING seconds
+{printout21 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+printout26 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+params=c(100,PERCENTAGE_TANK_FREEZING,0,0.05,0,NUM_SECONDS_FREEZING)
+freezelist<-lapply(bins,custom)
+
+totalnummofbehavior<-lapply(freezelist,length)
+maxnum=tail(sort(as.numeric(totalnummofbehavior)),1)/3
+
+if (DETAILS=='ON')
+{printout34 <- matrix(,maxnum,3*length(freezelist),
+byrow=F,dimnames = list(rep(paste(filename),maxnum),
+paste(c('Start Time','End Time','Total Duration'),
+sort(rep(1:length(freezelist),3)))))
+
+for (i in 1:length(bins))
+{if(!is.null(freezelist[[i]]))
+{t1<-freezelist[[i]][,1]
+length(t1)<-maxnum
+t2<-freezelist[[i]][,2]
+length(t2)<-maxnum
+t3<-freezelist[[i]][,3]
+length(t3)<-maxnum
+printout34[,(i*3-2):(i*3)]<-as.numeric(cbind(t1,t2,t3))}}
+}
+
+for (i in 1:length(bins)){
+printout21[1,i] <- length(freezelist[[i]][,1])
+printout26[1,i] <- sum(freezelist[[i]][,3])
+}
+if(NUMBER_OF_FACS!=0){
+printout21<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout21)
+printout26<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout26)}}
+
+if (FLOATING == 'ON') #fish not moving within PERCENTAGE_TANK_FLOATING% (not in periphery) of fishtank for NUM_SECONDS_FLOAING seconds
+{printout22 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+printout27 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+params=c(PERCENTAGE_TANK_FLOATING,0,0,0.05,0,NUM_SECONDS_FLOATING)
+floatinglist<-lapply(bins,custom)
+
+totalnummofbehavior<-lapply(floatinglist,length)
+maxnum2=tail(sort(as.numeric(totalnummofbehavior)),1)/3
+
+if (DETAILS=='ON')
+{printout35 <- matrix(,maxnum2,3*length(floatinglist),
+byrow=F,dimnames = list(rep(paste(filename),maxnum2),
+paste(c('Start Time','End Time','Total Duration'),
+sort(rep(1:length(floatinglist),3)))))
+
+for (i in 1:length(bins))
+{if(!is.null(floatinglist[[i]]))
+{t1<-floatinglist[[i]][,1]
+length(t1)<-maxnum2
+t2<-floatinglist[[i]][,2]
+length(t2)<-maxnum2
+t3<-floatinglist[[i]][,3]
+length(t3)<-maxnum2
+printout35[,(i*3-2):(i*3)]<-as.numeric(cbind(t1,t2,t3))}}
+}
+
+for (i in 1:length(bins)){
+printout22[1,i] <- length(floatinglist[[i]][,1])
+printout27[1,i] <- sum(floatinglist[[i]][,3])}
+if(NUMBER_OF_FACS!=0){
+printout22<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout22)
+printout27<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout27)
+}}
+
+if (LEAPING == 'ON')
+{printout23 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+printout28 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+params=c(100,0,SPEED_EXCEEDED_LEAPING,10000,0,SECONDS_LEAPING)
+leapinglist<-lapply(bins,custom)
+
+totalnummofbehavior<-lapply(leapinglist,length)
+maxnum3=tail(sort(as.numeric(totalnummofbehavior)),1)/3
+
+if (DETAILS=='ON')
+{printout36 <- matrix(,maxnum3,3*length(leapinglist),
+byrow=F,dimnames = list(rep(paste(filename),maxnum3),
+paste(c('Start Time','End Time','Total Duration'),
+sort(rep(1:length(leapinglist),3)))))
+
+for (i in 1:length(bins))
+{if(!is.null(leapinglist[[i]]))
+{t1<-leapinglist[[i]][,1]
+length(t1)<-maxnum3
+t2<-leapinglist[[i]][,2]
+length(t2)<-maxnum3
+t3<-leapinglist[[i]][,3]
+length(t3)<-maxnum3
+printout36[,(i*3-2):(i*3)]<-as.numeric(cbind(t1,t2,t3))}}
+}
+
+for (i in 1:length(bins)){
+printout23[1,i] <- length(leapinglist[[i]][,1])
+printout28[1,i] <- sum(leapinglist[[i]][,3])}
+if(NUMBER_OF_FACS!=0){
+printout23<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout23)
+printout28<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout28)
+}}
+
+if (ERRATIC == 'ON') #amount of times fish is inside of PERCENTILE_OF_TANK_ERRATIC percentile of fishtank swimming at SPEED_ERRATIC cm/sec changing direction continuously for SECONDS_ERRATIC seconds
+{printout24 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+printout29 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+params=c(PERCENTILE_OF_TANK_ERRATIC,0,SPEED_ERRATIC,10000,NUM_TURNS_ERRATIC,SECONDS_ERRATIC)
+erraticlist<-lapply(bins,custom)
+
+totalnummofbehavior<-lapply(erraticlist,length)
+maxnum4=tail(sort(as.numeric(totalnummofbehavior)),1)/3
+
+if (DETAILS=='ON')
+{printout37 <- matrix(,maxnum4,3*length(erraticlist),
+byrow=F,dimnames = list(rep(paste(filename),maxnum4),
+paste(c('Start Time','End Time','Total Duration'),
+sort(rep(1:length(erraticlist),3)))))
+
+for (i in 1:length(bins))
+{if(!is.null(erraticlist[[i]]))
+{t1<-erraticlist[[i]][,1]
+length(t1)<-maxnum4
+t2<-erraticlist[[i]][,2]
+length(t2)<-maxnum4
+t3<-erraticlist[[i]][,3]
+length(t3)<-maxnum4
+printout37[,(i*3-2):(i*3)]<-as.numeric(cbind(t1,t2,t3))}}
+}
+
+for (i in 1:length(bins)){
+printout24[1,i] <- length(erraticlist[[i]][,1])
+printout29[1,i] <- sum(erraticlist[[i]][,3])}
+if(NUMBER_OF_FACS!=0){
+printout24<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout24)
+printout29<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout29)
+}}
+
+if (THRASHING == 'ON')
+{i = 1
+printout25 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+printout30 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+params=c(100,THRASHING_PERCENTILE,0,10000,NUM_TURNS_THRASHING,SECONDS_THRASHING)
+thrashinglist<-lapply(bins,custom)
+
+totalnummofbehavior<-lapply(thrashinglist,length)
+maxnum5=tail(sort(as.numeric(totalnummofbehavior)),1)/3
+
+if (DETAILS=='ON')
+{printout38 <- matrix(,maxnum5,3*length(thrashinglist),
+byrow=F,dimnames = list(rep(paste(filename),maxnum5),
+paste(c('Start Time','End Time','Total Duration'),
+sort(rep(1:length(thrashinglist),3)))))
+
+for (i in 1:length(bins))
+{if(!is.null(thrashinglist[[i]]))
+{t1<-thrashinglist[[i]][,1]
+length(t1)<-maxnum5
+t2<-thrashinglist[[i]][,2]
+length(t2)<-maxnum5
+t3<-thrashinglist[[i]][,3]
+length(t3)<-maxnum5
+printout38[,(i*3-2):(i*3)]<-as.numeric(cbind(t1,t2,t3))}}
+}
+
+
+for (i in 1:length(bins)){
+printout25[1,i] <- length(thrashinglist[[i]][,1])
+printout30[1,i] <- sum(thrashinglist[[i]][,3])}
+if(NUMBER_OF_FACS!=0){
+printout25<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout25)
+printout30<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout30)
+}}
+
+if (CUSTOM == 'ON')
+{printout31 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+printout32 <- matrix(,1,length(bins),byrow=F,dimnames = list(c(paste(filename)),c(paste('bin ', 1:length(bins)))))
+params=c(MIN_PERCENTILE,MAX_PERCENTILE,MIN_SPEED_CUST,MAX_SPEED_CUST,CUST_TURN,CUST_TIME)
+customlist<-lapply(bins,custom)
+
+totalnummofbehavior<-lapply(customlist,length)
+maxnum6=tail(sort(as.numeric(totalnummofbehavior)),1)/3
+
+if (DETAILS=='ON')
+{printout39 <- matrix(,maxnum6,3*length(customlist),
+byrow=F,dimnames = list(rep(paste(filename),maxnum6),
+paste(c('Start Time','End Time','Total Duration'),
+sort(rep(1:length(customlist),3)))))
+
+for (i in 1:length(bins))
+{if(!is.null(customlist[[i]]))
+{t1<-customlist[[i]][,1]
+length(t1)<-maxnum6
+t2<-customlist[[i]][,2]
+length(t2)<-maxnum6
+t3<-customlist[[i]][,3]
+length(t3)<-maxnum6
+printout39[,(i*3-2):(i*3)]<-as.numeric(cbind(t1,t2,t3))}}
+}
+
+for (i in 1:length(bins)){
+printout31[1,i] <- length(customlist[[i]][,1])
+printout32[1,i] <- sum(customlist[[i]][,3])}
+if(NUMBER_OF_FACS!=0){
+printout31<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout31)
+printout32<-cbind(t(as.matrix(starttimesvec[file_index,-1])),printout32)
+}}
+
+if (file_index == 1){
+maxlength = length(bins)}
+
+if (file_index > 1){
+if (length(bins) > maxlength){
+print('please rearrange your files so the one with the most bins is first in the queue')}
+}
+
+fix_column_length<-function(printout)
+{if (file_index > 1){
+while (maxlength > ncol(printout))
+{printout = cbind(printout,'.') #to make it more SPSS friendly...
+colnames(printout)[ncol(printout)] = paste('bin ' , ncol(printout))}
+print(paste('Adding columns to file ', file_index))}
+return(printout)}
+
+#to customize data for its export into excel...
+if (SPEED == 'ON')
+{data1 = rbind(data1,fix_column_length(printout1))
+data2 = rbind(data2,fix_column_length(printout2))
+data3 = rbind(data3,fix_column_length(printout3))
+data4 = rbind(data4,fix_column_length(printout4))}
+
+if (THIGMOTAXIS == 'ON')
+{data5 = rbind(data5,printout5)}
+
+if (TIMESPENT == 'ON')
+{data6 = rbind(data6,fix_column_length(printout6))
+data7 = rbind(data7,fix_column_length(printout7))
+data8 = rbind(data8,fix_column_length(printout8))
+data9 = rbind(data9,fix_column_length(printout9))
+data10 = rbind(data10,fix_column_length(printout10))
+data11 = rbind(data11,fix_column_length(printout11))
+data12 = rbind(data12,fix_column_length(printout12))
+data13 = rbind(data13,fix_column_length(printout13))
+data14 = rbind(data14,fix_column_length(printout14))
+data15 = rbind(data15,fix_column_length(printout15))}
+
+if (DISTANCE_FROM_SIDES == 'ON')
+{data16 = rbind(data16,fix_column_length(printout16))
+data17 = rbind(data17,fix_column_length(printout17))
+data18 = rbind(data18,fix_column_length(printout18))
+data19 = rbind(data19,fix_column_length(printout19))}
+
+if (TIME_AT_OUTER_PERCENT == 'ON')
+{data20 = rbind(data20,fix_column_length(printout20))}
+
+if (FREEZING == 'ON')
+{data21 = rbind(data21,fix_column_length(printout21))
+data26 = rbind(data26,fix_column_length(printout26))
+if (DETAILS == 'ON')
+{data34 = rbind(data34,fix_column_length(printout34))}
+}
+
+if (FLOATING == 'ON')
+{data22 = rbind(data22,fix_column_length(printout22))
+data27 = rbind(data27,fix_column_length(printout27))
+if (DETAILS == 'ON')
+{data35 = rbind(data35,fix_column_length(printout35))}
+}
+
+
+if (LEAPING == 'ON')
+{data23 = rbind(data23,fix_column_length(printout23))
+data28 = rbind(data28,fix_column_length(printout28))
+if (DETAILS == 'ON')
+{data36 = rbind(data36,fix_column_length(printout36))}
+}
+
+if (ERRATIC == 'ON')
+{data24 = rbind(data24,fix_column_length(printout24))
+data29 = rbind(data29,fix_column_length(printout29))
+if (DETAILS == 'ON')
+{data37 = rbind(data37,fix_column_length(printout37))}
+}
+
+if (THRASHING == 'ON')
+{data25 = rbind(data25,fix_column_length(printout25))
+data30 = rbind(data30,fix_column_length(printout30))
+if (DETAILS == 'ON')
+{data38 = rbind(data38,fix_column_length(printout38))}
+}
+
+if (CUSTOM == 'ON')
+{data31 = rbind(data31,fix_column_length(printout31))
+data32 = rbind(data32,fix_column_length(printout32))
+if (DETAILS == 'ON')
+{data39 = rbind(data39,fix_column_length(printout39))}
+}
+
+
+if (ADVANCED == 'ON')
+{data33 = rbind(data33,printout33)}
+
+
+glabel(paste('processed file', file_index , 'of', length(fishfiles)),container=textwindow)
+db[[file_index]]<-bins
+file_index = file_index + 1}
+
+if (EXCEL == 'ON')
+{write.xlsx(x = fishfiles, file = "output.excelfile.xlsx",sheetName = "list of input files", row.names = TRUE)
+
+if (SPEED == 'ON')
+{write.xlsx(x = data1, file = "output.excelfile.xlsx",sheetName = "Distance Travelled", row.names = TRUE, append=T)
+write.xlsx(x = data2, file = "output.excelfile.xlsx",sheetName = "Average Speed", row.names = TRUE, append=T)
+write.xlsx(x = data3, file = "output.excelfile.xlsx",sheetName = "Standard Deviation of Speed", row.names = TRUE, append=T)
+write.xlsx(x = data4, file = "output.excelfile.xlsx",sheetName = "Top Speed", row.names = TRUE, append=T)}
+
+if (THIGMOTAXIS == 'ON')
+{write.xlsx(x = data5, file = "output.excelfile.xlsx",sheetName = "Thigmotaxis", row.names = TRUE,append=T)}
+
+if (TIMESPENT == 'ON')
+{write.xlsx(x = data6, file = "output.excelfile.xlsx",sheetName = "Time spent accelerating", row.names = TRUE, append=T)
+write.xlsx(x = data7, file = "output.excelfile.xlsx",sheetName = "Time spent still", row.names = TRUE, append=T)
+write.xlsx(x = data8, file = "output.excelfile.xlsx",sheetName = "Time spent changing direction", row.names = TRUE, append=T)
+write.xlsx(x = data9, file = "output.excelfile.xlsx",sheetName = "Time spent at 0-5 cm per sec", row.names = TRUE, append=T)
+write.xlsx(x = data10, file = "output.excelfile.xlsx",sheetName = "Time spent at 5-10 cm per sec", row.names = TRUE, append=T)
+write.xlsx(x = data11, file = "output.excelfile.xlsx",sheetName = "Time spent at 10-15 cm per sec", row.names = TRUE, append=T)
+write.xlsx(x = data12, file = "output.excelfile.xlsx",sheetName = "Time spent at 15-20 cm per sec", row.names = TRUE, append=T)
+write.xlsx(x = data13, file = "output.excelfile.xlsx",sheetName = "Time spent at 20-25 cm per sec", row.names = TRUE, append=T)
+write.xlsx(x = data14, file = "output.excelfile.xlsx",sheetName = "Time spent at 25-30 cm per sec", row.names = TRUE, append=T)
+write.xlsx(x = data15, file = "output.excelfile.xlsx",sheetName = "Time spent at 30+ cm per sec", row.names = TRUE, append=T)}
+
+if (DISTANCE_FROM_SIDES == 'ON')
+{write.xlsx(x = data16, file = "output.excelfile.xlsx",sheetName = "Distance from bottom", row.names = TRUE, append=T)
+write.xlsx(x = data17, file = "output.excelfile.xlsx",sheetName = "Distance from top", row.names = TRUE, append=T)
+write.xlsx(x = data18, file = "output.excelfile.xlsx",sheetName = "Distance from left", row.names = TRUE, append=T)
+write.xlsx(x = data19, file = "output.excelfile.xlsx",sheetName = "Distance from right", row.names = TRUE, append=T)}
+
+if (TIME_AT_OUTER_PERCENT == 'ON')
+{write.xlsx(x = data20, file = "output.excelfile.xlsx",sheetName = "Time at outer percent", row.names = TRUE, append=T)}
+
+if (FREEZING == 'ON')
+{write.xlsx(x = data21, file = "output.excelfile.xlsx",sheetName = "Number of Times Freezing", row.names = TRUE, append=T)
+write.xlsx(x = data26, file = "output.excelfile.xlsx",sheetName = "Seconds Spent Freezing", row.names = TRUE, append=T)}
+
+if (FLOATING == 'ON')
+{write.xlsx(x = data22, file = "output.excelfile.xlsx",sheetName = "Number of Times Floating", row.names = TRUE, append=T)
+write.xlsx(x = data27, file = "output.excelfile.xlsx",sheetName = "Seconds Spent Floating", row.names = TRUE, append=T)}
+
+if (LEAPING == 'ON')
+{write.xlsx(x = data23, file = "output.excelfile.xlsx",sheetName = "Number Of Times Leaping", row.names = TRUE, append=T)
+write.xlsx(x = data28, file = "output.excelfile.xlsx",sheetName = "Seconds Spent Leaping", row.names = TRUE, append=T)}
+
+if (ERRATIC == 'ON')
+{write.xlsx(x = data24, file = "output.excelfile.xlsx",sheetName = "Number of Times Erratic", row.names = TRUE, append=T)
+write.xlsx(x = data29, file = "output.excelfile.xlsx",sheetName = "Seconds Spent Erratic", row.names = TRUE, append=T)}
+
+if (THRASHING == 'ON')
+{write.xlsx(x = data25, file = "output.excelfile.xlsx",sheetName = "Number of Times Thrashing", row.names = TRUE, append=T)
+write.xlsx(x = data30, file = "output.excelfile.xlsx",sheetName = "Seconds Spent Thrashing", row.names = TRUE, append=T)}
+
+if (CUSTOM == 'ON')
+{write.xlsx(x = data31, file = "output.excelfile.xlsx",sheetName = "Number of Times Doing Custom Behavior", row.names = TRUE, append=T)
+write.xlsx(x = data32, file = "output.excelfile.xlsx",sheetName = "Seconds Spent Doing Custom Behavior", row.names = TRUE, append=T)}
+
+if (ADVANCED == 'ON')
+{write.xlsx(x = data33, file = "Advancedoutput.excelfile.xlsx",sheetName = "Advanced", row.names = TRUE)}
+
+if (DETAILS == 'ON')
+{write.xlsx(x = fishfiles, file = "Detailedoutput.excelfile.xlsx",sheetName = "Detailed Behavior", row.names = TRUE)
+if (FREEZING == 'ON')
+{if(length(data34)!=0)
+{write.xlsx(x = data34, file = "Detailedoutput.excelfile.xlsx",sheetName = "Freezing Details", row.names = TRUE, append=T)}}
+if (FLOATING == 'ON')
+{if(length(data35)!=0)
+{write.xlsx(x = data35, file = "Detailedoutput.excelfile.xlsx",sheetName = "Floating Details", row.names = TRUE, append=T)}}
+if (LEAPING == 'ON')
+{if(length(data36)!=0)
+{write.xlsx(x = data36, file = "Detailedoutput.excelfile.xlsx",sheetName = "Leaping Details", row.names = TRUE, append=T)}}
+if (ERRATIC == 'ON')
+{if(length(data37)!=0)
+{write.xlsx(x = data37, file = "Detailedoutput.excelfile.xlsx",sheetName = "Erratic Details", row.names = TRUE, append=T)}}
+if (THRASHING == 'ON')
+{if(length(data38)!=0)
+{write.xlsx(x = data38, file = "Detailedoutput.excelfile.xlsx",sheetName = "Thrashing Details", row.names = TRUE, append=T)}}
+if (CUSTOM == 'ON')
+{if(length(data39)!=0)
+{write.xlsx(x = data39, file = "Detailedoutput.excelfile.xlsx",sheetName = "Custom Behavior Details", row.names = TRUE, append=T)}}
+}
+}
+
+glabel(paste('your file is available at,', getwd()),container=textwindow)
+#rm(list=ls(all=TRUE))
+
+
+functions[[1]]<-data1
+functions[[2]]<-data2
+functions[[3]]<-data3
+functions[[4]]<-data4
+functions[[5]]<-data5
+functions[[6]]<-data6
+functions[[7]]<-data7
+functions[[8]]<-data8
+functions[[9]]<-data9
+functions[[10]]<-data10
+functions[[11]]<-data11
+functions[[12]]<-data12
+functions[[13]]<-data13
+functions[[14]]<-data14
+functions[[15]]<-data15
+functions[[16]]<-data16
+functions[[17]]<-data17
+functions[[18]]<-data18
+functions[[19]]<-data19
+functions[[20]]<-data20
+functions[[21]]<-data21
+functions[[22]]<-data22
+functions[[23]]<-data23
+functions[[24]]<-data24
+functions[[25]]<-data25
+functions[[26]]<-data26
+functions[[27]]<-data27
+functions[[28]]<-data28
+functions[[29]]<-data29
+functions[[30]]<-data30
+functions[[31]]<-data31
+functions[[32]]<-data32
+functions[[33]]<-data33
+functions[[34]]<-data34
+functions[[35]]<-data35
+functions[[36]]<-data36
+functions[[37]]<-data37
+functions[[38]]<-data38
+functions[[39]]<-data39
+
+
+}

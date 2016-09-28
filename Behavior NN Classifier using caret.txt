@@ -1,0 +1,41 @@
+library('neuralnet')
+library('nnet')
+library('caret')
+library('mlbench')
+
+#modify training and testing set so we can train a neural net  on them
+labels<-factor(labels,levels=BEHAVIORLIST)
+trainlabels<-class.ind(labels)
+trainingset<-cbind(trainlabels,trainingset)
+trainingset2<-matrix(as.numeric(trainingset),length (trainingset[,1]),
+length(trainingset[1,]))
+
+set.seed(107)
+trainingsubset<-createDataPartition(y=labels,
+p=1,list=FALSE)
+
+trainingset<-trainingset2[trainingsubset,]
+validationset<-trainingset2[-trainingsubset,]
+
+fitControl <- trainControl(method = "repeatedcv",number = 10, repeats = 10)
+
+formula <- paste(paste('trainingset [,',1:5,']',collapse='+'),'~',
+paste('trainingset[,',6:105,']',collapse='+'))
+
+bNN <- train(trainingset[,6:105],labels[trainingsubset], method = "nnet",
+trControl=fitControl, metric=='Kappa',maximize=TRUE, maxit=300)
+#optimal parameters: decay=0.1, size=5
+
+nnetlab<-as.matrix(labels[trainingsubset])
+bNN2<-nnet(trainingset[,6:105],class.ind(nnetlab),size=5,decay=0.1,maxit=500)
+
+predictions=predict(bNN2, trainingset[,6:105])
+
+trainingpredictions<-c()
+trainresults<-predictions
+for (i in 1:length(trainresults[,1]))
+{ind<-which.max(trainresults[i,])
+trainingpredictions<-c(trainingpredictions,labels (trainlabels)[[2]][ind])}
+
+trainref<-factor(labels[trainingsubset],levels=BEHAVIORLIST)
+trainingpredictions<-factor(trainingpredictions,levels=BEHAVIORLIST)

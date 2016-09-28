@@ -1,0 +1,45 @@
+reftest<-factor(labels2,levels=BEHAVIORLIST)
+testset<-matrix(as.numeric(testset),length(testset[,1]),
+length(testset[1,]))
+
+testpredlst<-list()
+length(testpredlst)<-length(bNNlst)
+
+#lets gather each classifiers predictions!
+for (i in 1:length(bNNlst))
+{if (!is.null(bNNlst[[i]]))
+{pred<-compute(bNNlst[[i]],testset)
+testpredlst[[i]]<-pred$net.result
+}}
+
+#lets compare the probability of each label from each seperate classifier 
+#and use only labels with higher than 70% probability (we will set default
+#behavior if no behavior has higher than 70%)
+prob<-c()
+highestprob<-c()
+testingpredictions<-c()
+for (i in 1:length(testpredlst[[1]][,1]))
+{for (j in 1:length(bNNlst))
+{prob<-c(prob,max(testpredlst[[j]][i,1:(length(BEHAVIORLIST)-1)]))}
+if ( max(prob)>.7)
+{ind=which.max(prob)
+testingpredictions=c(testingpredictions,BEHAVIORLIST[ind])}
+if ( max(prob)<.7)
+{testingpredictions=c(testingpredictions,BEHAVIORLIST[length(BEHAVIORLIST)])}
+highestprob<-rbind(highestprob,prob)
+prob=c()
+}
+
+#now lets see how these predictions compare to our actual results!
+testingpredictions<-factor(testingpredictions,levels=BEHAVIORLIST)
+conmat3<-confusionMatrix(testingpredictions,reftest)
+
+highestprob=matrix(pmax(highestprob,0),length(highestprob[,1]),
+length(highestprob[1,]))
+sums<-apply(highestprob,1,sum)
+probwinner<-apply(highestprob,1,max)
+highestprobprop<-highestprob/sums
+
+finalcompare<-cbind(reftest,testingpredictions,probwinner,highestprobprop)
+
+

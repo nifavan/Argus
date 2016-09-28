@@ -1,0 +1,31 @@
+#Make sure behaviors have same number of trials to avoid underfitting
+#swimparams2<-swimparams[1:length(thrashparams[,1]),]
+swimparams2<-swimparams
+
+library(RnavGraph)
+library('nnet')
+options(stringsAsFactors=FALSE)
+
+trainamount<-floor(length(swimparams2[,2])*0.7)
+trainamount2<-floor(length(thrashparams[,2])*0.7)
+trainamount3<-floor(length(zigzagparams[,2])*0.7)
+trainamount4<-floor(length(floatparams[,2])*0.7)
+
+traindata<-rbind(swimparams[1:trainamount,],thrashparams[1:trainamount2,],zigzagparams[1:trainamount3,],floatparams[1:trainamount4,])
+
+validdata<-rbind(swimparams[(trainamount+1):length(swimparams2[,1]),],thrashparams[(trainamount2+1):length(thrashparams[,1]),],zigzagparams[(trainamount3+1):length(zigzagparams[,1]),],floatparams[(trainamount4+1):length(floatparams[,1]),])
+
+lab = c(rep('Swim',trainamount),rep('Thrash',trainamount2),rep('ZigZag',trainamount3),rep('Float',trainamount4))
+ideal <- class.ind(lab)
+
+lab2 = c(rep('Swim',length(swimparams2[,1])-trainamount),rep('Thrash',length(thrashparams[,1])-trainamount2),rep('ZigZag',length(zigzagparams[,1])-trainamount3),rep('Float',length(floatparams[,1])-trainamount4))
+idealv <- class.ind(lab2)
+
+behaveNN<-nnet(traindata, ideal, wts=behaveNN$wts, size=30, maxit=200,decay=.01, softmax=TRUE)
+
+predictions=predict(behaveNN, traindata, type="class")
+library('caret')
+conmat1<-confusionMatrix(predictions,lab)
+
+predictions2=predict(behaveNN, validdata, type="class")
+conmat2<-confusionMatrix(predictions2,lab2)

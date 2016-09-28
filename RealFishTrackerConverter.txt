@@ -1,0 +1,49 @@
+LAST_ROW_WITH_LETTERS = 9
+
+if (NUM_FISH==1)
+{filename=substr(fishfiles[file_index],0,14)
+datar<-read.table(file=file,sep=" ",header=F,as.is=T,fill=T,col.names=1:8) #reads raw data from realfishtracker into R
+xmax<-as.numeric(datar[4,5])
+ymax<-as.numeric(datar[6,5])
+x<-as.numeric(datar[-LAST_ROW_WITH_LETTERS:-1,7]) #finds x coordinate values
+y<-as.numeric(datar[-LAST_ROW_WITH_LETTERS:-1,8]) #finds y coordinate values
+times2<-as.numeric(datar[-LAST_ROW_WITH_LETTERS:-1,1])
+times<-times2-times2[1]
+coord<-cbind(times,x,y)
+framerate<-floor(1/coord[2,1])}
+
+if (NUM_FISH!=1)
+{filename=substr(fishfiles[file_index],0,14)
+datar<-read.table(file=file,sep=" ",header=F,as.is=T,fill=T,col.names=1:(1+6*NUM_FISH)) #reads raw data from realfishtracker into R
+xmax<-as.numeric(datar[6,5])
+ymax<-as.numeric(datar[8,5])
+datar = datar[-LAST_ROW_WITH_LETTERS:-1,]
+
+make_table<-function(datar , NUM_FISH)
+{row_num = 1
+matrix_of_fish_coords <- datar[,1]
+while (row_num < 1+6*NUM_FISH)
+{row_num = row_num + 5
+new_x_row <- as.numeric(datar[,row_num]) #finds next x coordinate values
+matrix_of_fish_coords = cbind(matrix_of_fish_coords , new_x_row)
+row_num = row_num + 1
+new_y_row <-as.numeric(datar[,row_num]) #finds next y coordinate values
+matrix_of_fish_coords = cbind(matrix_of_fish_coords , new_y_row)}
+return(matrix_of_fish_coords)}
+
+coordwithtime = make_table(datar , NUM_FISH)
+coord = as.numeric(coordwithtime[,-1])
+coord<-matrix(coord,,NUM_FISH*2)
+
+times2<-as.numeric(coordwithtime[,1])
+times2<-times2 - as.numeric(times2[1])
+framerate<-floor(1/times2[2])
+if (is.na(framerate))
+{framerate=30
+}
+
+timeremoved<-CUTOFF_TIMES_LIST[file_index]*framerate #number of frames to be cut
+timeremoved<-as.numeric(timeremoved*framerate) #number of frames to be cut
+coord<-coord[-1:-timeremoved,]
+times2<-coord[,1]
+}

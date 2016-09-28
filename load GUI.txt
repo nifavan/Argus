@@ -1,0 +1,267 @@
+require(gWidgets)
+options("guiToolkit"="RGtk2")
+require(RGtk2)
+
+mainwindow3 = gwindow(title = "Argus", visible = TRUE, name=title, width = 300, height= 550,  parent=NULL)
+mainwindow2 = ggroup(horizontal=FALSE,container=mainwindow3)
+mainwindow = ggroup(container=mainwindow2)
+
+commands = gnotebook(container=mainwindow)
+
+#img <- gdkPixbufNewFromFile("C:\\Users\\Matthew Scicluna\\Desktop\\Argus\\mainpic.png")
+#getToolkitWidget(mainwindow)$setIcon(img$retval)
+
+
+
+#commands <- ggroup(horizontal = FALSE, container = mainwindow)
+cmdfrm = gframe("Select Function(s)",horizontal=FALSE, expand=TRUE, container=commands,  label="commands")
+funlist <- gcheckboxgroup(c("Speed","Thigmotaxis","Distance From Sides", "Timespent", "Time  at Outer Percent", "Freezing", "Floating", "Thrashing", "Leaping", "Custom","Erratic", "IID",  "VIID", "NND"), container=cmdfrm)
+layout<-glayout(homogeneous = FALSE, spacing = 5, container = cmdfrm)
+layout[1,1]<-funlist
+
+cmdfrm2 = gframe("Select Parameter(s)",horizontal=FALSE, container=commands,  label="Parameters")
+g = gexpandgroup("Thigmotaxis X and Y coord", cont=cmdfrm2)
+glabel("X coord", container=g)
+thigx <- gedit("25", container = g)
+glabel("Y coord", container=g)
+thigy <- gedit("25", container = g)
+
+outerperc<-function(h,...)
+{a=as.numeric(svalue(percentage))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c('gray'),  border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('white'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+outerperc2<-function(h,...)
+{a=as.numeric(svalue(Perctankfreeze))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c('gray'),  border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('white'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+outerperc3<-function(h,...)
+{a=as.numeric(svalue(percentilethrash))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c('gray'),  border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('white'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+outerperc4<-function(h,...)
+{a=as.numeric(svalue(custperout))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c('gray'),  border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('white'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+
+innerperc<-function(h,...)
+{a=as.numeric(svalue(Perctankfloat))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c ('white'), border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('gray'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+innerperc2<-function(h,...)
+{a=as.numeric(svalue(percerr))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c ('white'), border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('gray'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+innerperc3<-function(h,...)
+{a=as.numeric(svalue(custperin))
+xmax=100
+ymax=100
+win <- gwindow("Region")
+ggraphics(ps=10, container=win)
+par(mar=rep(0, 4))
+plot.new()
+plot(c(0, xmax), c(0, ymax), type = "n",xaxt='n',yaxt='n',bty='n', ann=FALSE, main='region')
+rect(xleft=0, ybottom=0, xright=xmax, ytop=ymax, density = NULL, angle = 45, col = c ('white'), border = NULL, lty = par("lty"), lwd = par("lwd"))
+rect(xleft=xmax/2-(a*xmax/200), ybottom=ymax/2-(a*ymax/200), xright=xmax/2+(a*xmax/200),  ytop=ymax/2+(a*ymax/200), density = NULL, angle = 45, col = c('gray'), border = NULL, lty =  par("lty"), lwd = par("lwd"))
+}
+
+
+
+timeatout = gexpandgroup("Time at Outer Percent", horizontal=FALSE, cont=cmdfrm2)
+glabel("Percentage", container=timeatout)
+percentage <- gedit("95",handler=outerperc, container = timeatout)
+
+
+
+freeze = gexpandgroup("Freezing", horizontal=FALSE, cont=cmdfrm2)
+glabel("Percent of Tank", container=freeze)
+Perctankfreeze <-gedit("95",handler=outerperc2, container = freeze)
+glabel("Number of Seconds", container = freeze)
+numsecfreeze <-gedit("1", container = freeze)
+
+
+float = gexpandgroup("Floating", horizontal=FALSE, cont=cmdfrm2)
+glabel("Percent of Tank", container=float)
+Perctankfloat <-gedit("95",handler=innerperc, container = float)
+glabel("Number of Seconds", container = float)
+numsecfloat <-gedit("1", container = float)
+
+
+leap = gexpandgroup("Leaping", horizontal=FALSE, cont=cmdfrm2)
+glabel("Speed Exceeded", container=leap)
+speedleap <-gedit("3", container = leap)
+glabel("Number of Seconds", container=leap)
+numsecleap <-gedit("2", container = leap)
+
+
+Erratic = gexpandgroup("Erratic", horizontal=FALSE, cont=cmdfrm2)
+glabel("Percent of Tank", container=Erratic)
+percerr <- gedit("95",handler=innerperc2, container = Erratic)
+glabel("Speed Exceeded", container=Erratic)
+speederr <-gedit("3", container = Erratic)
+glabel("Number of Seconds", container=Erratic)
+numsecerr <-gedit("2", container = Erratic)
+glabel("Number of Turns", container=Erratic)
+numturnserr <-gedit("10", container = Erratic)
+
+
+thrashing = gexpandgroup("Thrashing", horizontal=FALSE, cont=cmdfrm2)
+glabel("Percent of Tank", container=thrashing)
+percentilethrash <-gedit("95",handler=outerperc3, container = thrashing)
+glabel("Number of Seconds", container=thrashing)
+numsecthrash <-gedit("1", container = thrashing)
+glabel("Number of Turns", container=thrashing)
+numturnsthrash <-gedit("10", container = thrashing)
+
+custom = gexpandgroup("Custom", horizontal=FALSE, cont=cmdfrm2)
+glabel("Within Percent of Tank", container=custom)
+custperin <-gedit("80",handler=innerperc3, container = custom)
+glabel("Outside Percent of Tank", container=custom)
+custperout <-gedit("95",handler=outerperc4, container = custom)
+glabel("Number of Seconds", container=custom)
+custsec <-gedit("1", container = custom)
+glabel("Number of Turns", container = custom)
+custterm <-gedit("10", container = custom)
+glabel("Minimum Speed", container=custom)
+custminspeed <-gedit("1", container = custom)
+glabel("Maximum Speed", container=custom)
+custmaxspeed <-gedit("5", container = custom)
+
+
+StartConditions <- ggroup(horizontal = FALSE, container = mainwindow)
+strfrm = gframe("Select Conditions",horizontal=FALSE, expand=TRUE, container=StartConditions)
+
+#glabel("Last Row With Letters", container=strfrm)
+#lastrow <- gedit("9", container = strfrm)
+glabel("Tracking System Used", container=strfrm)
+tracker <- gedit("RFT", container = strfrm)
+glabel("Number of Factors", container=strfrm)
+numfacs <- gedit("1", container = strfrm)
+glabel("Number of Fish", container=strfrm)
+numfish <- gedit("1", container = strfrm)
+glabel("Number of bins", container=strfrm)
+numbins <- gedit("5", container = strfrm)
+glabel("Time of bins in Seconds", container=strfrm)
+timeofbins <- gedit("60", container = strfrm)
+
+newfun = function(h, ...) source(paste(program_directory,"\\scripts\\GUI frontend.txt",sep=''))
+
+Runbutton <- gbutton("Run", handler = newfun, container = strfrm)
+advanced<-gcheckbox('Frame-by-Frame Features',container=strfrm)
+detail<-gcheckbox('Advanced Behavioral Details',container=strfrm)
+printexcell<-gcheckbox('Print Excel File(s)',container=strfrm)
+
+smoothwindow = gframe("Select Options(s)",horizontal=FALSE, expand=TRUE, container=commands,  label="Options")
+smoothbutton=gcheckbox('Smooth Trajectory',cont=smoothwindow)
+glabel("Window (in seconds)", container=smoothwindow)
+window <- gedit("0.5", container = smoothwindow)
+glabel("Threshold Speed to reject values (in cm/sec)", container=smoothwindow)
+threshold <- gedit("50", container = smoothwindow)
+glabel("Threshold Angular Velocity to reject values (in deg/sec)", container=smoothwindow)
+threshold2 <- gedit("50", container = smoothwindow)
+occbutton=gcheckbox('Resolve Occlusions',cont=smoothwindow)
+
+
+#gtable('test',chosencol=6, container=mainwindow)
+#gimage("info", container=mainwindow)
+
+ fileChoose <- function(action="print", text = "Select a file...",
+ type="open", ...) {
+ gfile(text=text, type=type, ..., action = action, handler =
+ function(h,...) {
+ do.call(h$action, list(h$file))
+ })
+ }
+
+g = function(h,...) {fileChoose(action="setwd", type="selectdir", text="Select a  directory...")
+glabel(paste('working directory is now',getwd()), container=textwindow)
+}
+
+f = function(h,...) q()
+
+helphandler = function(h, ...)
+{
+menu2=gwindow('help menu',visible=TRUE,horizontal=FALSE); menu=ggroup (horizontal=FALSE,container=menu2) ;
+glabel('Please Select an Option',container=menu); 
+speedm=gexpandgroup('Speed', horizontal=FALSE, container=menu) ; glabel(' Calculates speed,  acceleration , distance travelled and fastest speed', container=speedm) ;
+thigm=gexpandgroup('Thigmotaxis', horizontal=FALSE, container=menu) ; glabel('Average  distance from fish to a point in the fishtank specified by parameter "Thigmoxaxis X and Y  coord"', container=thigm);
+distm=gexpandgroup('Distance From Sides', horizontal=FALSE, container=menu) ; glabel ('Calculates the average distance the fish was to each side and to the top and bottom of the  fish tank
+', container=distm) ;
+timem=gexpandgroup('Time Spent', horizontal=FALSE, container=menu) ; glabel(' Calculates the  time fish spent accelerating, changing direction, staying still, and moving at particular  speeds', container=timem);
+percm=gexpandgroup('Time At Outer Percent', horizontal=FALSE, container=menu) ; glabel ('Calculates the time the fish spent in the outer percentage of the fish tank. Where the  percentage is specified by parameter "Time at Outer Percent"', container=percm) ;
+freezm=gexpandgroup('Freezing', horizontal=FALSE, container=menu) ; glabel('Number of times  fish was detected being still within a percentile of the fishtank, specified by parameters',  container=freezm);
+floam=gexpandgroup('Floating', horizontal=FALSE, container=menu) ; glabel('Number of times  fish was detected being still outside of a percentile of the fishtank, specified by  parameters', container=floam) ;
+thram=gexpandgroup('Thrashing', horizontal=FALSE, container=menu) ; glabel('Number of times  fish was detected thrashing within a percentile of the fishtank turning a specified number of  times for a specified amout of time, specified by parameters', container=thram);
+leapm=gexpandgroup('Leaping', horizontal=FALSE, container=menu) ; glabel('Number of times  fish was detected leaping, maintaining a particular minimum speed for an amount of time  specified by parameters', container=leapm) ;
+erram=gexpandgroup('Erratic', horizontal=FALSE, container=menu) ; glabel('Number of times  fish was detected being erratic, within a percentile of the fishtank at a specified minimum  speed turning a specified number of times for an amount of time specified by parameters',  container=erram);
+custm=gexpandgroup('Custom', horizontal=FALSE, container=menu) ; glabel('Number of times fish  was detected within a percentile and outside of a percentile of the fishtank within a  specified speed range turning a specified number of times for an amount of time specified by  parameters', container=custm);
+IIDm=gexpandgroup('Inter Individual Distance', horizontal=FALSE, container=menu) ; glabel ('Calculate average distance each fish spends apart from the other fish', container=IIDm);
+VIIDm=gexpandgroup('Variance of Inter Individual Distance', horizontal=FALSE, container=menu)  ; glabel('Number of times fish was detected leaping, maintaining a particular minimum speed  for an amount of time specified by parameters', container=VIIDm) ;
+NNDm=gexpandgroup('Nearest Neighbour Distance', horizontal=FALSE, container=menu) ; glabel ('Calculate the distance from each fish and its nearest neighbour', container=NNDm)
+}
+
+tblst=list(
+open = list(handler=g, icon="open"),
+help = list(handler=helphandler, icon="help"),
+quit = list(handler=f, icon="close")
+)
+
+gtoolbar(tblst, container=mainwindow3)
+
+textwindow<-ggroup(horizontal=FALSE,use.scrollwindow = TRUE, container=TRUE) #cont used to be mainwindow2
+size(textwindow)<-c(500,100)
+glabel('Command History',container=textwindow)
+#used to be strfrm

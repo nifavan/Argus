@@ -1,0 +1,47 @@
+#Run Argus through here to save time
+
+program_directory<-"C:\\Users\\Matthew Scicluna\\Desktop\\Argus"
+
+#add times here for training and validation set
+vecofstarts=c(3019.35, 3024.48, 3025.35, 3017.13, 3020.24,3020.05,3019.15,3017.87)
+#for 6a-e: c(3033.06,3037.33,3036.02,3030.73,3033.46)
+#for 3a-h: c(3019.35, 3024.48, 3025.35, 3017.13, 3020.24)
+#,  3020.05, 3019.15, 3017.87, 3015.22, 3032.25, 3033.06, 3037.33)
+starttimesvec=vecofstarts
+starttimesvec<-cbind(starttimesvec,0)
+require(gWidgets)
+options("guiToolkit"="RGtk2")
+require(RGtk2)
+tracker=gedit('RFT')
+textwindow<-ggroup(horizontal=FALSE,use.scrollwindow = TRUE, container=TRUE) #cont used to be mainwindow2
+size(textwindow)<-c(500,100)
+glabel('Command History',container=textwindow)
+NUMBER_OF_FACS=0
+SPEED<-'OFF'
+THIGMOTAXIS<-'OFF'
+DISTANCE_FROM_SIDES<-'OFF'
+TIMESPENT<-'OFF'
+TIME_AT_OUTER_PERCENT<-'OFF'
+FREEZING<-'OFF'
+FLOATING<-'OFF'
+LEAPING<-'OFF'
+ERRATIC<-'OFF'
+THRASHING<-'OFF'
+CUSTOM <- 'OFF'
+IID <-'OFF'
+VIID <-'OFF'
+NND <-'OFF'
+ADVANCED<-'OFF'
+DETAILS<-'OFF'
+EXCEL<-'OFF'
+FOLDER_URL = dir()
+NUM_FISH = 1
+NUM_BINS = 1
+TIME_OF_BINS = 600
+SPECIFIC_BIN_START_TIME = 'NONE'                #deactivate  for now...
+SPECIFIC_BIN_END_TIME = 'NONE'                  #deactivate  for now...
+SMOOTH='OFF'
+OCCLUSIONS='OFF'
+dir=paste(program_directory,"\\files\\ML Files\\Training and Validation Set",sep='')
+setwd(dir)
+source(paste(program_directory,"\\scripts\\fish analyzer program.txt",sep=''));

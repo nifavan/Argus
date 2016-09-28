@@ -1,0 +1,8 @@
+finaltest<-list()
+length(finaltest)<-length(finalref)
+for (i in 1:length(finalref))
+{pred<-as.factor(NNpredictions[[i]])
+levels(pred)<-c('Swim','Thrash','ZigZag','Float')
+actual<-as.factor(finalref[[i]])
+levels(actual)<-levels(pred)
+finaltest[[i]]<-confusionMatrix(pred,actual)}

@@ -1,0 +1,42 @@
+smoothfunct<-function(bin)
+{lagInterval=as.numeric(LAGINTERVAL*framerate)
+newbin=c()
+newx=c()
+newy=c()
+for (i in 1:floor(length(bin[,1])-lagInterval+1))
+{newcoordsx=bin[i:floor(i+lagInterval-1),1]
+newcoordsy=bin[i:floor(i+lagInterval-1),2]
+newcoordsxold=c(newcoordsx[-1],newcoordsx[length(newcoordsx)])
+newcoordsyold=c(newcoordsy[-1],newcoordsx[length(newcoordsx)])
+checkx=c(0,diff(newcoordsx))
+checky=c(0,diff(newcoordsy))
+checkav=abs(as.vector(180/pi)*(acos(newcoordsyold/sqrt ((newcoordsxold^2)+(newcoordsyold^2)))-acos(newcoordsy/sqrt ((newcoordsx^2)+(newcoordsy^2))))*framerate)
+checkframe<-matrix(c (newcoordsx,newcoordsy,checkx,checky,checkav),,5)
+ind<-(checkframe[,3]<THRESHOLD|checkframe[,4]<THRESHOLD|  checkframe[,5]<THRESHOLD2) #only one threshold has to be exceeded for the data point to be removed.
+newcoordsx<-checkframe[,1][ind]
+newcoordsy<-checkframe[,2][ind]
+newx<-c(newx,weighted.mean(newcoordsx,1:length(newcoordsx)))
+newy<-c(newy,weighted.mean(newcoordsy,1:length(newcoordsy)))
+}
+newbin=cbind(newx,newy)
+colnames(bin)<-colnames(newbin)
+newbin=rbind(newbin,bin[floor((length(bin[,1])-lagInterval +2)):length(bin[,1]),])
+return(newbin)
+}
+
+multismoothfunct<-function(sbins)
+{
+newbins<-bins[[1]]
+for (i in seq(1, by = 2, length = NUM_FISH))
+{newbins[,i:(i+1)]<-smoothfunct(sbins[,i:(i+1)])}
+return(newbins)
+}
+
+#newbin=rbind(newbin,c(mean(newcoordsx),mean(newcoordsy))) if you want simple moving average rather than weighted moving average.
+#THRESHOLD=50 can test with this code!
+#xx=cumsum(rnorm(100,0,3))
+#xy=cumsum(rnorm(100,0,3))
+#bin=cbind(xx,xy)
+#bin[50,]<-100 #a bad value
+#plot(bin,type='l',col=c('red')) #can see the effect of smoothing!
+#plot(newbin,type='l',col=c('blue'))

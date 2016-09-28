@@ -1,0 +1,13 @@
+heatmaphelper<-function(bin,minx,maxx,miny,maxy)
+{return(sum(bin[,2]>minx & bin[,2]<maxx & bin[,3]>miny & bin[,3]<maxy)/length(bin[,2]))}
+
+heatmap<-function(bint,numbinsx,numbinsy)
+{bin<-data.frame(bint)
+binlengthx<-xmax/numbinsx
+binlengthy<-ymax/numbinsy
+tableofbins<-matrix(,numbinsx,numbinsy)
+for (i in 1:numbinsy){
+for (j in 1:numbinsx)
+{tableofbins[i,j]<-heatmaphelper(bin,(binlengthx*(i-1)),(binlengthx*(i)),(binlengthy*(j-1)),(binlengthy*(j)))}}
+tab2<-t(tableofbins)[,4:1]
+return(list(image(tab2,col=rainbow(100,s=1,v=1,start=(3/6),end=(5/6),alpha=1)),tableofbins))}

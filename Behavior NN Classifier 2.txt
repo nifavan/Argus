@@ -1,0 +1,55 @@
+library('neuralnet')
+library('nnet')
+
+#modify training and testing set so we can train a neural net on them
+labels<-factor(labels,levels=BEHAVIORLIST)
+trainlabels<-class.ind(labels)
+trainingset<-cbind(trainlabels,trainingset)
+trainingset2<-matrix(as.numeric(trainingset),length(trainingset[,1]),
+length(trainingset[1,]))
+
+#keep 30% of training set as a validation set
+tokeep<-floor(0.7*length(trainingset2[,1]))
+trainingsubset<-sample(1:length(trainingset2[,1]),tokeep)
+validsubset<-setdiff(1:length(trainingset2[,1]),trainingsubset)
+trainingset<-trainingset2[trainingsubset,]
+validationset<-trainingset2[validsubset,]
+
+formula <- paste(paste('trainingset[,',1:5,']',collapse='+'),'~',
+paste('trainingset[,',6:105,']',collapse='+'))
+
+bNN<-neuralnet(formula, trainingset, 
+hidden = 2, threshold = 0.01,
+stepmax = 1e+05, rep = 1, startweights = NULL,
+learningrate.limit = NULL,
+learningrate.factor = list(minus = 0.5, plus = 1.2),
+learningrate=NULL, lifesign = "none",
+lifesign.step = 1000, algorithm = "rprop+",
+err.fct = "ce", act.fct = "logistic",
+linear.output = FALSE, exclude = NULL,
+constant.weights = NULL, likelihood = FALSE)
+
+predictions=compute(bNN, trainingset[,6:105])
+predictions2=compute(bNN, validationset[,6:105])
+
+trainingpredictions<-c()
+trainresults<-predictions$net.result
+for (i in 1:length(trainresults[,1]))
+{ind<-which.max(trainresults[i,])
+trainingpredictions<-c(trainingpredictions,labels(trainlabels)[[2]][ind])}
+
+validresults<-predictions2$net.result
+validpredictions<-c()
+validresults<-predictions2$net.result
+for (i in 1:length(validresults[,1]))
+{ind<-which.max(validresults[i,])
+validpredictions<-c(validpredictions,labels(trainlabels)[[2]][ind])}
+
+#validate predictions
+library('caret')
+trainref<-factor(labels[trainingsubset],levels=BEHAVIORLIST)
+validref<-factor(labels[validsubset],levels=BEHAVIORLIST)
+trainingpredictions<-factor(trainingpredictions,levels=BEHAVIORLIST)
+validpredictions<-factor(validpredictions,levels=BEHAVIORLIST)
+conmat1<-confusionMatrix(trainingpredictions,trainref)
+conmat2<-confusionMatrix(validpredictions,validref)
